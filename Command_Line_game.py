@@ -9,7 +9,7 @@ Created on Wed Jun  8 20:51:28 2022
 #CommandLine Game
 from Logic import *
 from Display import *
-    
+from AI import*
 
    
    
@@ -83,6 +83,7 @@ def Player_input_prompt(Hand,Player_No):
             
         
         handleft,Ordered_hand=Hand_popper(Hand,order)
+        Ordered_hand=Set_Order_fixer(Ordered_hand)
         Hand_Order_progress(handleft,Ordered_hand)
         print("Are you happy with hand thus far Y/N")
         yes_or_no=input().lower()
@@ -175,7 +176,32 @@ def Two_player_game():
         print(s7tr(p2_points)+" hands to "+ str(p1_points))
         return result,p1_points,p2_points   
 
-def Start_Series(Game_no):
+def Computer_game():
+    input("Press Enter to start game")
+    #Generate hands
+    Hands=HandGenerator(2)
+    P1_hand=Player_input_prompt(Hands[0],1)
+    for i in range(6):
+        print()
+    Computer_hand=DoubleStratAI(Hands[1])
+    print("Player's hand")
+    Hand_print(P1_hand)
+    print("Computer's hand")
+    Hand_print(Computer_hand)
+    #Result Print
+    result,p1_points,p2_points=two_Player_winner(P1_hand,Computer_hand)
+    if(result==0):
+        print("Kitty")
+        return result,p1_points,p2_points
+    elif(result==1):
+        print("Player 1 wins")
+        print(str(p1_points)+" hands to "+ str(p2_points))
+        return result,p1_points,p2_points
+    else:
+        print("Player 2 wins")
+        print(str(p2_points)+" hands to "+ str(p1_points))
+        return result,p1_points,p2_points 
+def Start_Series(Game_no,GameType):
     P1_wins=0
     P1_hands_won=0
     P2_wins=0
@@ -186,7 +212,7 @@ def Start_Series(Game_no):
     game_no=1
     while(P1_wins<Game_no and P2_wins<Game_no):
         print("Game "+str(game_no)+": ")
-        result,P1_set,P2_set=Two_player_game_v2()
+        result,P1_set,P2_set=GameType()
         P1_hands_won+=P1_set
         P2_hands_won+=P2_set
         if(result==0):

@@ -134,7 +134,23 @@ def betterSet(Set_1,Set_2):
                 return 2
     #if none of the other exit conditions are met return the final tied result
     return 0
-
+def winning_hand(Hand_1,Hand_2):
+    p1_points=0
+    p2_points=0
+    #Show cards
+    i=0
+    #This loop might be triggered by a mutual agreement to show or a timer
+    while(i<7):
+        if(betterSet(Hand_1[i:i+3],Hand_2[i:i+3])==1):
+            p1_points+=1
+        elif(betterSet(Hand_1[i:i+3],Hand_2[i:i+3])==2):
+            p2_points+=1
+        i+=3
+    if(p1_points>p2_points):
+        return Hand_1
+    else:
+        return Hand_2
+    
 def two_Player_winner(Hand_1,Hand_2):
     p1_points=0
     p2_points=0
