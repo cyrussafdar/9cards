@@ -8,34 +8,9 @@ Created on Wed Jun  8 20:51:28 2022
 
 #CommandLine Game
 from Logic import *
-from colorama import Fore
-def Hand_print(Hand):
-    print(Fore.BLACK+"______________________________________________")
-    print(Fore.BLACK+"|    |    |    |    |    |    |    |    |    |")
-    handstring=Fore.BLACK+"|"
-    for card in Hand:
-        #if(card.number!=10)
-        handstring+=" "
-        handstring+=card.text()
-        if(card.Card==8):
-            handstring+=Fore.BLACK+"|"
-        else:
-            handstring+=Fore.BLACK+" |"
-    print(handstring)
-    print(Fore.BLACK+"|____|____|____|____|____|____|____|____|____|")
-def position_print():
-    print(Fore.BLACK+" "+"  0  "+"  1  "+"  2  "+"  3  "+"  4  "+"  5  "+"  6  "+"  7  "+"  8  ")
+from Display import *
     
-def Hand_reorder(Hand,order_string):
-   #Takes in a string with postions 0 to 8
-   #in the form a,b,c,d,e,f,g,h,i
-   order_string.strip()
-   new_hand=list()
-   for index in order_string.split(","):
-       new_hand.append(Hand[(int)(index)])
-   return new_hand
-    
-   
+
    
    
 #Hands=HandGenerator(2)
@@ -75,7 +50,81 @@ def Computer_Game():
         print("Computer wins")
         print(str(p2_points)+" hands to "+ str(p1_points))
         return result,p1_points,p2_points
+def Player_input_prompt(Hand,Player_No):
+    #used for storing the original 
+    Handdict={}
+    for i in range(len(Hand)):
+        Handdict[Hand[i].number]=str(i)
+    while(True):
+        order=""
+        print("Player "+str(Player_No)+"'s Hand: ")
+        Hand_print(Hand)
+        print("Enter indices of first set separated by a ,")
+        order+=input()
+        handleft,Ordered_hand=Hand_popper(Hand,order)
+        Hand_Order_progress(handleft,Ordered_hand)
+        #a temporary variable to convert the indices of the unordered hand to
+        #the original hands
+        print("Enter indices of second set separated by a ,")
+        temp_indices=input()
+        temp_indices.strip()
+        for i in temp_indices.split(","):
+            #getting the original index of the card pointed to by the user
+            order+=","
+            order+=Handdict[handleft[(int)(i)].number]
+        
+        handleft,Ordered_hand=Hand_popper(Hand,order)
+        Hand_Order_progress(handleft,Ordered_hand)
+        
+        for i in range(3):
+            #getting the original index of the card pointed to by the user
+            order+=","
+            order+=Handdict[handleft[(int)(i)].number]
+            
+        
+        handleft,Ordered_hand=Hand_popper(Hand,order)
+        Hand_Order_progress(handleft,Ordered_hand)
+        print("Are you happy with hand thus far Y/N")
+        yes_or_no=input().lower()
+        if(yes_or_no=='y' or yes_or_no=='z'):
+            break
+    return Ordered_hand
 
+def Two_player_game_v2():
+    input("Press Enter to start game")
+    #Generate hands
+    Hands=HandGenerator(2)
+    P1_hand=Player_input_prompt(Hands[0],1)
+    for i in range(6):
+        print()
+    print("pass it to Player 2")
+    for i in range(6):
+        print()
+    print("Player 2 press enter")
+    input()
+    P2_hand=Player_input_prompt(Hands[1],2)
+    
+    print()
+    print("Player 1's reordered hand: ")
+    Hand_print(P1_hand)
+    print()
+    print("Player 2's reordered hand: ")
+    Hand_print(P2_hand)
+    
+    #Result Print
+    result,p1_points,p2_points=two_Player_winner(P1_hand,P2_hand)
+    if(result==0):
+        print("Kitty")
+        return result,p1_points,p2_points
+    elif(result==1):
+        print("Player 1 wins")
+        print(str(p1_points)+" hands to "+ str(p2_points))
+        return result,p1_points,p2_points
+    else:
+        print("Player 2 wins")
+        print(str(p2_points)+" hands to "+ str(p1_points))
+        return result,p1_points,p2_points 
+    
 def Two_player_game():
     print("Press Enter to start game")
     input()
@@ -85,7 +134,7 @@ def Two_player_game():
     Player_hand=Hands[0]
     print("Player 1's hand: ")
     Hand_print(Player_hand)
-    position_print()
+    position_print(9)
     print("Input the Order you want your cards")
     order=input()
     Player_hand=Hand_reorder(Player_hand,order)
@@ -123,10 +172,10 @@ def Two_player_game():
         return result,p1_points,p2_points
     else:
         print("Player 2 wins")
-        print(str(p2_points)+" hands to "+ str(p1_points))
+        print(s7tr(p2_points)+" hands to "+ str(p1_points))
         return result,p1_points,p2_points   
 
-def Best_to(Game_no):
+def Start_Series(Game_no):
     P1_wins=0
     P1_hands_won=0
     P2_wins=0
@@ -137,7 +186,7 @@ def Best_to(Game_no):
     game_no=1
     while(P1_wins<Game_no and P2_wins<Game_no):
         print("Game "+str(game_no)+": ")
-        result,P1_set,P2_set=Two_player_game()
+        result,P1_set,P2_set=Two_player_game_v2()
         P1_hands_won+=P1_set
         P2_hands_won+=P2_set
         if(result==0):
@@ -153,15 +202,16 @@ def Best_to(Game_no):
         print()
         print("Total hands won by Player 1: " +str(P1_hands_won))
         print("Total hands won by Player 2: " +str(P2_hands_won))
+        #incrementing the game number
+        game_no+=1
     if(P1_wins>P2_wins):
         print("Player 1 wins series")
         print(str(P1_wins)+" to "+str(P2_wins))
     else:
         print("Player 2 wins series")
         print(str(P2_wins)+" to "+str(P1_wins))
-        #incrementing the game number
-        game_no+=1
+        
+    
 
-#while(True):
     
     

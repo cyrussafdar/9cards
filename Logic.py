@@ -197,3 +197,53 @@ def Handrank(Card_set):
             return 2,Comparing_Order
         else:
             return 0,Comparing_Order
+
+def Hand_reorder(Hand,order_string):
+   #Takes in a string with postions 0 to 8
+   #in the form a,b,c,d,e,f,g,h,i
+   order_string.strip()
+   new_hand=list()
+   for index in order_string.split(","):
+       new_hand.append(Hand[(int)(index)])
+   return new_hand
+    
+def Hand_popper(Hand,indices):
+   #Returns a string without the existing indices
+   #makes the command line game simpler
+   unordered_hand=list()
+   ordered_hand=list()
+   indices.strip()
+   indices=indices.split(",")
+   #doing it this way to retain the order that the user wants
+   for i in indices:
+       #print(i)
+       ordered_hand.append(Hand[(int)(i)])
+   indices=set(indices)
+   for i in range(len(Hand)):
+       if(str(i) not in indices):
+           unordered_hand.append(Hand[i])
+
+   return unordered_hand,ordered_hand   
+
+def Set_Order_fixer(Hand):
+    """Input: Takes in a Hand and 
+    Output: Hand sorted by sets largest rank """
+    #using bubble sort because hands need to be compared to understand the value
+    sets=list()
+    for i in range(0,8,3):
+        sets.append(Hand[i:i+3])
+    swap_flag=True
+    while(swap_flag):
+        swap_flag=False
+        for i in range(2):
+            if(betterSet(sets[i],sets[i+1])!=1):
+                temp=sets[i]
+                sets[i]=sets[i+1]
+                sets[i+1]=temp
+                swap_flag=True
+    
+    sortedHand=sets[0]
+    sortedHand.extend(sets[1])  
+    sortedHand.extend(sets[2])      
+    return sortedHand
+    
