@@ -66,7 +66,7 @@ def RandomHandSorter(Hand,Value_function):
     BestHand=Hand
     BestValue=Value_function(Hand)
     #takes in an unordered hand and returns a hand with some logic applied
-    for i in range(1000):
+    for i in range(500):
         current_hand=Hand_reorder(Hand,RandomOrderGenerator())
         current_hand=Set_Order_fixer(current_hand)
         current_val=Value_function(current_hand)

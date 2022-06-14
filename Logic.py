@@ -7,10 +7,27 @@ Created on Sat Aug 28 15:18:44 2021
 """
 import random
 import colorama
+import ast
 from colorama import Fore
+
 Suits=["♠","♥","♣","♦"]
 Cards=["2","3","4","5", "6","7","8","9", "10", "J","Q","K","A"]
 
+#Hashing methods
+def CardToHash(Set_of_Cards):
+    return HashKeyGenerator(Set_of_Cards[0].number,Set_of_Cards[1].number,Set_of_Cards[2].number)
+def ListToCards(ListOfCardNumbers):
+    return [CARD(ListOfCardNumbers[0]),CARD(ListOfCardNumbers[1]),CARD(ListOfCardNumbers[2])]
+def HashKeyGenerator(i,j,k):
+    return i**5+j**5+k**5+i**5*j**5*k**5
+#Loading the hash values for each hand
+with open('hash.txt') as f:
+    data = f.read()
+#Loading the dictionary
+HashToNumbers = ast.literal_eval(data)
+with open('Rank.txt') as f:
+    data=f.read()
+Rank=ast.literal_eval(data)
 #takes in numbers from 0 to 51
 class CARD(object):
     def __init__(self, number):
@@ -58,27 +75,6 @@ def HandGenerator(player_num):
         
     #Contains a list of 9 Card objects    
     return Hands
-    
-
-#Testing code
-
-def HandTest():
-    for i in range(2,6):
-        Hands=HandGenerator(i)
-        print(f"Test for {i} hands")
-        for hand in Hands:
-            print("Hand:\n")
-            for card in hand:
-                card.Print()
-            print()
-        print()
-#Testing the card generation
-def GeneratedHandTest(Hands):
-    for hand in Hands:
-        print("Hand:\n")
-        for card in hand:
-            card.Print()
-            print()
 
 
 
@@ -89,39 +85,14 @@ def GeneratedHandTest(Hands):
             #Flush/Colour=2
             #Pair=1
             #Nothing=0
-#A of hearts 2 of hearts 3 of hearts
-StraightFlush=[CARD(12),CARD(0),CARD(1)]
-#2 of hearts 3 of hearts 4 of hearts
-LowerStraightFlush=[CARD(2),CARD(0),CARD(1)]
 
-#5 of spades, 5 of hearts, 5 of dice
-ThreeofAkind=[CARD(3),CARD(16),CARD(29)]
-#2 of spades, 2 of hearts, 2 of dice
-LowerThreeofAkind=[CARD(0),CARD(13),CARD(26)]
-#A of hearts 2 of spades 3 of spades
-Straight=[CARD(25),CARD(0),CARD(1)]
-# K of hearts Q of hearts J of spades
-LowerStraight=[CARD(24),CARD(23),CARD(9)]
-# 2 of spades, 2 of hearts, 4 of spades
-Pair=[CARD(0),CARD(13),CARD(2)]
-# K of spades, K of hearts, 4 of spades
-Mid_pair=[CARD(11),CARD(24),CARD(2)]
-# A of spades, A of hearts, 4 of spades
-High_pair=[CARD(12),CARD(25),CARD(2)]
-# A of spades, A of hearts, 6 of spades
-Higher_pair_by_card=[CARD(12),CARD(25),CARD(4)]
-Nothing=[CARD(0),CARD(16),CARD(2)]
-Different_Suit_Nothing=[CARD(26),CARD(29),CARD(41)]
-
-Player1Hand=ThreeofAkind+LowerThreeofAkind+Pair
-Player2Hand=LowerThreeofAkind+High_pair+Mid_pair
 
 def betterSet(Set_1,Set_2):
     #returns 1 if Set_1 is stronger
     #returns 2 if Set_2 is stronger
     #returns 0 if tied
-    Handrank_1,cards_1=Handrank(Set_1)
-    Handrank_2,cards_2=Handrank(Set_2)
+    Handrank_1,cards_1=HashedHandRank(Set_1)
+    Handrank_2,cards_2=HashedHandRank(Set_2)
     if(Handrank_1>Handrank_2):
         return 1
     elif(Handrank_1<Handrank_2):
@@ -134,6 +105,7 @@ def betterSet(Set_1,Set_2):
                 return 2
     #if none of the other exit conditions are met return the final tied result
     return 0
+
 def winning_hand(Hand_1,Hand_2):
     p1_points=0
     p2_points=0
@@ -213,6 +185,52 @@ def Handrank(Card_set):
             return 2,Comparing_Order
         else:
             return 0,Comparing_Order
+def HashedHandRank(Card_set):
+    return Rank[CardToHash(Card_set)]
+#This function is if I need to replace the bubble swap to make it more efficient
+def Handrank_Orderless(Card_set):
+        #Takes a set of 3 cards and returns its 
+        Card_count=[0]*13
+        Suit_count=[0]*4
+        Comparing_Order=[]
+        #Slight nuance for pairs the pair should be compared first for others a 
+        #list sorted in descending order is fine
+        colour=False
+        straight=False
+        for card in Card_set:
+            Card_count[card.Card]+=1
+            Comparing_Order.append(card.Card)  
+            if(Card_count[card.Card]==3):
+                #condition for it being three of a kind
+                return 5, Comparing_Order
+            Suit_count[card.Suit_num]+=1
+            if(Suit_count[card.Suit_num]==3):
+                colour=True
+        
+        Comparing_Order.sort(reverse=True)
+        #print(Comparing_Order)
+        #The case where two numbers are the same and sorted with the pair first
+        if(Comparing_Order[0]==Comparing_Order[1]):
+            return 1
+        #The case where theres pairs and theyre sorted with the pair second
+        if(Comparing_Order[1]==Comparing_Order[2]):
+            return 1
+        
+            
+        if(Comparing_Order[0]-1==Comparing_Order[1] and 
+           Comparing_Order[1]-1== Comparing_Order[2]):
+            straight=True
+        if(Comparing_Order[0]==12 and Comparing_Order[1]==1 and Comparing_Order[2]==0):
+            straight=True
+        
+        if(straight and colour):
+            return 4
+        elif(straight):
+            return 3
+        elif(colour):
+            return 2
+        else:
+            return 0
 
 def Hand_reorder(Hand,order_string):
    #Takes in a string with postions 0 to 8
@@ -262,4 +280,24 @@ def Set_Order_fixer(Hand):
     sortedHand.extend(sets[1])  
     sortedHand.extend(sets[2])      
     return sortedHand
+def Sorted_Hands(Sets):
+    """Takes in hands and reorders them as per Handrank returns 
+    the indices of the original hands in the order of highest rank """
+    setDict={}
+    swap_flag=True
+    for i in range(len(Sets)):
+        #creating an inverse dictionary
+        setDict[CardToHash(Sets[i])]=i
+    while(swap_flag):
+        swap_flag=False
+        for i in range(len(Sets)-1):
+            if(betterSet(Sets[i],Sets[i+1])!=1):
+                temp=Sets[i]
+                Sets[i]=Sets[i+1]
+                Sets[i+1]=temp
+                swap_flag=True
+    Ordered_Sets=[]
+    for s in Sets:
+        Ordered_Sets.append(setDict[CardToHash(s)])
+    return Ordered_Sets
     
