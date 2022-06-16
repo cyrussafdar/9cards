@@ -1,0 +1,4 @@
+Changes:
+The value function was changed resulting in an actual value being output which sped up a lot of different functions and allowed for bubble sort to be done away with. Also freed up a lot of memory as the value function is also cached.
+Another change was made and this was a space vs time trade off. The hash function for 3 cards was altered so that regardless of the order in which the cards are input the hash output is such that the highest is first.
+The ranked hands only returns the top two values for hands rather than all of the hands, this frees up memory and also the top two are the ones of interest anyway. This will save space for most situations.

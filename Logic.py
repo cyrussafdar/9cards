@@ -333,35 +333,46 @@ def Set_Order_fixer(Hand):
     sortedHand.extend(sets[1])  
     sortedHand.extend(sets[2])      
     return sortedHand
-def Set_Order_fixer_v2(Sets):
-    """Takes in hands and reorders them as per Handrank returns 
+def Set_Order_fixer_v2(Hand):
+    """Takes in a hand and reorders them as per Handrank returns 
     the indices of the original hands in the order of highest rank """
     setDict={}
     Ranks=[]
-    swap_flag=True
-    for i in range(len(Sets)):
+    for i in range(0,len(Hand),3):
         #creating an inverse dictionary
-        rank=HashedHandRank(Sets[i])
-        CardHash=CardsToHash(Sets[i])
+        Card_set=Hand[i:i+3]
+        rank=HashedHandRank(Card_set)
         #setDict[value]=
-        if(isinstance(setDict[rank], list)):
-            setDict[rank].append(i)
+        
         if(rank in setDict):
-            setDict[rank]=[i,setDict[rank]]
+            if(isinstance(setDict[rank], list)):
+                setDict[rank].extend(Card_set)
+            else:
+                setDict[rank]=[Card_set,setDict[rank]]
         else:
-            setDict[rank]=i
+            setDict[rank]=Card_set
         Ranks.append(rank)
         
     Ranks.sort(reverse=True)
+    unique_ranks=set()
     Ordered_Sets=[]
-    for v in values:
-        if(isinstance(setDict[v], int)):
-            Ordered_Sets.append(setDict[v])
-        else:
-            Ordered_Sets.extend(setDict[v])
+    for r in Ranks:
+        if(r not in unique_ranks):
+            Ordered_Sets.extend(setDict[r])
+            unique_ranks.add(r)
+        
+        
     return Ordered_Sets
+def SetOrderchecker():
+    Hands=HandGenerator(5)
+    for hand in Hands:
+        Hand_print(hand)
+        print("version 1 :")
+        Hand_print(Set_Order_fixer(hand))
+        print("version 2 :")
+        Hand_print(Set_Order_fixer(hand))
 def Sorted_Hands(Sets):
-    """Takes in hands and reorders them as per Handrank returns 
+    """Takes in a list of sets and reorders them as per Handrank returns 
     the indices of the original hands in the order of highest rank """
     setDict={}
     values=[]
@@ -382,16 +393,3 @@ def Sorted_Hands(Sets):
         else:
             Ordered_Sets.extend(setDict[values[i]])
     return Ordered_Sets
-def Sorted_Hands_v2(Sets):
-    """Takes in hands and reorders them as per Handrank returns 
-    the indices of the original hands in the order of highest rank but using a more efficient sort"""
-#    if(len(Sets)==2):
-#        #code
-#        continue
-#    if(len(Sets)==3):
-#        continue
-#    if(len(Sets)==4):
-#        continue
-#    if(len(Sets)==5):
-#        continue
-    return

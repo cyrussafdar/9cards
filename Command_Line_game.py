@@ -50,7 +50,7 @@ def Player_input_no_2nd_guessing(Hand,Player_No):
             
         
     handleft,Ordered_hand=Hand_popper(Hand,order)
-    Ordered_hand=Set_Order_fixer(Ordered_hand)
+    Ordered_hand=Set_Order_fixer_v2(Ordered_hand)
     Hand_Order_progress(handleft,Ordered_hand)
        
     return Ordered_hand
@@ -88,7 +88,7 @@ def Player_input_prompt(Hand,Player_No):
             
         
         handleft,Ordered_hand=Hand_popper(Hand,order)
-        Ordered_hand=Set_Order_fixer(Ordered_hand)
+        Ordered_hand=Set_Order_fixer_v2(Ordered_hand)
         Hand_Order_progress(handleft,Ordered_hand)
         print("Are you happy with hand thus far Y/N")
         yes_or_no=input().lower()
@@ -306,7 +306,8 @@ def Round_loop(Players,PlayerNo,CompNo):
     for j in range(PlayerNo,PlayerNo+CompNo-1):
         Players[j].hand=DoubleStratAI(Hashto9Cards(Hands[j]))
     for j in range(0,PlayerNo):
-        Players[j].hand=Player_input_no_2nd_guessing(Hashto9Cards(Hands[j]),Players[j].name)
+        #Player_input_prompt #Player_input_no_2nd_guessing
+        Players[j].hand=Player_input_prompt(Hashto9Cards(Hands[j]),Players[j].name)
         if(j!=PlayerNo-1):
             PassToNextPlayer()
     #the last element which is always untouched
@@ -330,19 +331,74 @@ def Round_loop(Players,PlayerNo,CompNo):
             print("Hand Tied")
         else:
             HandsWon[Order[0]]+=1
-            print(Players[Order[0]].name+" wins hand")
+            print(Players[Order[0]].name+" wins hand "+str(int(i/3+1))+" with :")
+            Hand_print(HandList[Order[0]])
+            print()
             
     #At the end of it all
+    windex=None
     for h in range(len(HandsWon)):
+        if(HandsWon[h]>=2):
+            windex=h
         Players[h].total_hands+=HandsWon[h]
-    return Players
+    #winner
+    return Players,windex
 def Round_loop_test():
-    Players=[Player_v2("Computer","Billy Gates"),Player_v2("Computer","Billy Gates 2"),Player_v2("Computer","Billy Gates 3"),Player_v2("Computer","Billy Gates 4"),Player_v2("Computer","Billy Gates 5")]
-    PlayerNo=0
-    CompNo=5
+    Players=[Player_v2("Player","Cyrus"),Player_v2("Computer","Billy Gates 2"),Player_v2("Computer","Billy Gates 3"),Player_v2("Computer","Billy Gates 4"),Player_v2("Computer","Billy Gates 5")]
+    PlayerNo=1
+    CompNo=4
     Players=Round_loop(Players,PlayerNo,CompNo)
     for p in Players:
         print(p.name+" won "+str(p.total_hands)+ " hands")
+
+def All_encompassing_Game():
+    Players,PlayerNo,CompNo=Player_generate_prompt_v2()
+    #To store the highest score so the exit condition can quickly be triggered
+    highest_score=0
+    #Keep Track of Player with highest score
+    highest_score_index=0
+    #To implement kitty scoring
+    win_payout=1
+    print("Best to ?")
+    Best_to=(int)(input())
+    Game_count=0
+    while(highest_score<Best_to):
+        Game_count+=1
+        Players,windex=Round_loop(Players,PlayerNo,CompNo)
+        if(windex==None):
+            print("Kitty")
+            win_payout+=1
+        else:
+            print(Players[windex].name+" wins")
+            Players[windex].points+=win_payout
+            #sets the highest
+            if(Players[windex].points>highest_score):
+                highest_score=Players[windex].points
+                highest_score_index=windex
+                
+            win_payout=1
+        
+        #To add a break in between
+        if(highest_score>=Best_to):
+            print()
+            print(Players[highest_score_index].name+ " wins with " + str(Players[highest_score_index].points)+" points")
+            print("Press Enter to see a summary")
+            input()
+            print()
+            print()
+        else:
+            print()
+            print(Players[highest_score_index].name+" is leading, points: "+ str(Players[highest_score_index].points))
+            print("Press Enter to continue")
+            input()
+        
+    for p in Players:
+        print(p.identifier()+" won "+str(p.points)+" points out of a total "+str(Game_count)+" and a total of "+str(p.total_hands)+" hands")
+        print("Hands won percentage of "+ str(int(p.total_hands*100/(Game_count*3)))+"%")
+        print("Points won percentage of "+ str(int(p.points*100/Game_count))+"%")
+        print("Hands to points ratio of "+str(p.total_hands/p.points))
+        print()
+    
 def Player_generate_prompt():
     default_Names=["Bill Gates","CEO of WB","Ratan Tata","Amitabh Bachhan","Bill Gates' son in law", "President of WB"] 
     print("How many Human players?")

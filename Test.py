@@ -8,6 +8,7 @@ Created on Mon Jun 13 20:54:00 2022
 from Logic import *
 #A of hearts 2 of hearts 3 of hearts
 StraightFlush=[CARD(12),CARD(0),CARD(1)]
+differentSuitsameSFLUSH=[CARD(25),CARD(13),CARD(14)]
 #2 of hearts 3 of hearts 4 of hearts
 LowerStraightFlush=[CARD(2),CARD(0),CARD(1)]
 
