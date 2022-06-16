@@ -52,3 +52,8 @@ def GeneratedHandTest(Hands):
         for card in hand:
             card.Print()
             print()
+def PlayerTest():
+    Players=Player_generate_prompt_v2()
+    for p in Players:
+        print(p.identifier())
+        

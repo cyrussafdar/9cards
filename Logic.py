@@ -14,17 +14,49 @@ Suits=["♠","♥","♣","♦"]
 Cards=["2","3","4","5", "6","7","8","9", "10", "J","Q","K","A"]
 
 #Hashing methods
-def CardToHash(Set_of_Cards):
-    return HashKeyGenerator(Set_of_Cards[0].number,Set_of_Cards[1].number,Set_of_Cards[2].number)
-def ListToCards(ListOfCardNumbers):
-    return [CARD(ListOfCardNumbers[0]),CARD(ListOfCardNumbers[1]),CARD(ListOfCardNumbers[2])]
-def HashKeyGenerator(i,j,k):
-    return i**5+j**5+k**5+i**5*j**5*k**5
-#Loading the hash values for each hand
-with open('hash.txt') as f:
-    data = f.read()
-#Loading the dictionary
-HashToNumbers = ast.literal_eval(data)
+def CardsToHash(Card_set):
+    mult=1
+    HashNumber=0
+    
+    for card in Card_set:
+        HashNumber+=card.number*mult
+        mult*=100
+    return HashNumber
+
+def Hashto9Cards(hashnumber):
+    Cards=list()
+    div=1
+    mod=100
+    for i in range(9):
+        Cards.append(CARD((hashnumber%mod)//div))
+        div*=100
+        mod*=100
+    return Cards
+
+def Hashto3Cards(hashnumber):
+    Cards=list()
+    div=1
+    mod=100
+    for i in range(3):
+        Cards.append(CARD((hashnumber%mod)//div))
+        div*=100
+        mod*=100
+    return Cards
+
+def SortedCardsToHash(Card_set):
+    """Only to be used with 3 cards as using this with more than that will 
+    change the order and hence the value of cards"""
+    mult=1
+    HashNumber=0
+    NumberList=list()
+    for card in Card_set:
+        NumberList.append(card.number)
+    #Sorting by ascending
+    NumberList.sort(reverse=True)
+    for num in NumberList:
+        HashNumber+=num*mult
+        mult*=100
+    return HashNumber    
 with open('Rank.txt') as f:
     data=f.read()
 Rank=ast.literal_eval(data)
@@ -61,6 +93,7 @@ def DeckCreateandShuffle():
     #shuffle tbhe deck
     random.shuffle(Deck)
     return Deck
+
 def HandGenerator(player_num):  
     #List container for two hands
     Hands=list()
@@ -75,7 +108,30 @@ def HandGenerator(player_num):
         
     #Contains a list of 9 Card objects    
     return Hands
-
+def DeckCreateandShuffleHash():
+    Deck=list()
+    #populate it
+    for i in range(52):
+        Deck.append(i)
+    #shuffle tbhe deck
+    random.shuffle(Deck)
+    return Deck
+def HandGeneratorHash(player_num):  
+    #List container for two hands
+    Hands=[0]*player_num
+    #Create Deck
+    Deck=DeckCreateandShuffleHash()
+    
+    
+    for i in range(player_num):
+        mult=1
+        for j in range(9):
+            #Dealing the hands one by one
+            Hands[i]+=Deck[i+j*player_num]*mult
+            mult*=100
+        
+    #Contains a list of 9 Card objects
+    return Hands
 
 
 #Rankings
@@ -91,20 +147,15 @@ def betterSet(Set_1,Set_2):
     #returns 1 if Set_1 is stronger
     #returns 2 if Set_2 is stronger
     #returns 0 if tied
-    Handrank_1,cards_1=HashedHandRank(Set_1)
-    Handrank_2,cards_2=HashedHandRank(Set_2)
+    Handrank_1=HashedHandRank(Set_1)
+    Handrank_2=HashedHandRank(Set_2)
+    
     if(Handrank_1>Handrank_2):
         return 1
     elif(Handrank_1<Handrank_2):
         return 2
     else:
-        for i in range(3):
-            if(cards_1[i]>cards_2[i]):
-                return 1
-            if(cards_1[i]<cards_2[i]):
-                return 2
-    #if none of the other exit conditions are met return the final tied result
-    return 0
+        return 0
 
 def winning_hand(Hand_1,Hand_2):
     p1_points=0
@@ -185,8 +236,9 @@ def Handrank(Card_set):
             return 2,Comparing_Order
         else:
             return 0,Comparing_Order
+        
 def HashedHandRank(Card_set):
-    return Rank[CardToHash(Card_set)]
+    return Rank[SortedCardsToHash(Card_set)]
 #This function is if I need to replace the bubble swap to make it more efficient
 def Handrank_Orderless(Card_set):
         #Takes a set of 3 cards and returns its 
@@ -202,7 +254,7 @@ def Handrank_Orderless(Card_set):
             Comparing_Order.append(card.Card)  
             if(Card_count[card.Card]==3):
                 #condition for it being three of a kind
-                return 5, Comparing_Order
+                return 5+CardsToHash([CARD(Comparing_Order[0]),CARD(Comparing_Order[1]),CARD(Comparing_Order[2])])/10000000
             Suit_count[card.Suit_num]+=1
             if(Suit_count[card.Suit_num]==3):
                 colour=True
@@ -211,10 +263,10 @@ def Handrank_Orderless(Card_set):
         #print(Comparing_Order)
         #The case where two numbers are the same and sorted with the pair first
         if(Comparing_Order[0]==Comparing_Order[1]):
-            return 1
+            return 1+CardsToHash([CARD(Comparing_Order[2]),CARD(Comparing_Order[1]),CARD(Comparing_Order[0])])/10000000
         #The case where theres pairs and theyre sorted with the pair second
-        if(Comparing_Order[1]==Comparing_Order[2]):
-            return 1
+        elif(Comparing_Order[1]==Comparing_Order[2]):
+            return 1+CardsToHash([CARD(Comparing_Order[0]),CARD(Comparing_Order[1]),CARD(Comparing_Order[2])])/10000000
         
             
         if(Comparing_Order[0]-1==Comparing_Order[1] and 
@@ -224,13 +276,13 @@ def Handrank_Orderless(Card_set):
             straight=True
         
         if(straight and colour):
-            return 4
+            return 4+CardsToHash([CARD(Comparing_Order[2]),CARD(Comparing_Order[1]),CARD(Comparing_Order[0])])/10000000
         elif(straight):
-            return 3
+            return 3+CardsToHash([CARD(Comparing_Order[2]),CARD(Comparing_Order[1]),CARD(Comparing_Order[0])])/10000000
         elif(colour):
-            return 2
+            return 2+CardsToHash([CARD(Comparing_Order[2]),CARD(Comparing_Order[1]),CARD(Comparing_Order[0])])/10000000
         else:
-            return 0
+            return 0+CardsToHash([CARD(Comparing_Order[2]),CARD(Comparing_Order[1]),CARD(Comparing_Order[0])])/10000000
 
 def Hand_reorder(Hand,order_string):
    #Takes in a string with postions 0 to 8
@@ -238,6 +290,7 @@ def Hand_reorder(Hand,order_string):
    order_string.strip()
    new_hand=list()
    for index in order_string.split(","):
+       #print(sys.getsizeof(index))
        new_hand.append(Hand[(int)(index)])
    return new_hand
     
@@ -280,24 +333,65 @@ def Set_Order_fixer(Hand):
     sortedHand.extend(sets[1])  
     sortedHand.extend(sets[2])      
     return sortedHand
+def Set_Order_fixer_v2(Sets):
+    """Takes in hands and reorders them as per Handrank returns 
+    the indices of the original hands in the order of highest rank """
+    setDict={}
+    Ranks=[]
+    swap_flag=True
+    for i in range(len(Sets)):
+        #creating an inverse dictionary
+        rank=HashedHandRank(Sets[i])
+        CardHash=CardsToHash(Sets[i])
+        #setDict[value]=
+        if(isinstance(setDict[rank], list)):
+            setDict[rank].append(i)
+        if(rank in setDict):
+            setDict[rank]=[i,setDict[rank]]
+        else:
+            setDict[rank]=i
+        Ranks.append(rank)
+        
+    Ranks.sort(reverse=True)
+    Ordered_Sets=[]
+    for v in values:
+        if(isinstance(setDict[v], int)):
+            Ordered_Sets.append(setDict[v])
+        else:
+            Ordered_Sets.extend(setDict[v])
+    return Ordered_Sets
 def Sorted_Hands(Sets):
     """Takes in hands and reorders them as per Handrank returns 
     the indices of the original hands in the order of highest rank """
     setDict={}
-    swap_flag=True
+    values=[]
     for i in range(len(Sets)):
         #creating an inverse dictionary
-        setDict[CardToHash(Sets[i])]=i
-    while(swap_flag):
-        swap_flag=False
-        for i in range(len(Sets)-1):
-            if(betterSet(Sets[i],Sets[i+1])!=1):
-                temp=Sets[i]
-                Sets[i]=Sets[i+1]
-                Sets[i+1]=temp
-                swap_flag=True
+        value=HashedHandRank(Sets[i])
+        if(value in setDict):
+            setDict[value]=[i,setDict[value]]
+        else:
+            setDict[value]=i
+        values.append(value)
+        
+    values.sort(reverse=True)
     Ordered_Sets=[]
-    for s in Sets:
-        Ordered_Sets.append(setDict[CardToHash(s)])
+    for i in range(2):
+        if(isinstance(setDict[values[i]], int)):
+            Ordered_Sets.append(setDict[values[i]])
+        else:
+            Ordered_Sets.extend(setDict[values[i]])
     return Ordered_Sets
-    
+def Sorted_Hands_v2(Sets):
+    """Takes in hands and reorders them as per Handrank returns 
+    the indices of the original hands in the order of highest rank but using a more efficient sort"""
+#    if(len(Sets)==2):
+#        #code
+#        continue
+#    if(len(Sets)==3):
+#        continue
+#    if(len(Sets)==4):
+#        continue
+#    if(len(Sets)==5):
+#        continue
+    return

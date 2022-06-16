@@ -14,9 +14,9 @@ def SimpleHandValue(Hand):
     SecondHand_weight=1
     ThirdHand_weight=1
     
-    FirstHandRank,dum=Handrank(Hand[0:3])
-    SecondHandRank,dum=Handrank(Hand[3:6])
-    ThirdHandRank,dum=Handrank(Hand[6:9])
+    FirstHandRank=HashedHandRank(Hand[0:3])
+    SecondHandRank=HashedHandRank(Hand[3:6])
+    ThirdHandRank=HashedHandRank(Hand[6:9])
     
     value+=FirstHandRank*FirstHand_weight
     value+=SecondHandRank*SecondHand_weight
@@ -25,12 +25,12 @@ def SimpleHandValue(Hand):
 def BottomHeavyHandValue(Hand):
     value=0
     FirstHand_weight=1
-    SecondHand_weight=1.25
+    SecondHand_weight=1
     ThirdHand_weight=1.75
     
-    FirstHandRank,dum=Handrank(Hand[0:3])
-    SecondHandRank,dum=Handrank(Hand[3:6])
-    ThirdHandRank,dum=Handrank(Hand[6:9])
+    FirstHandRank=HashedHandRank(Hand[0:3])
+    SecondHandRank=HashedHandRank(Hand[3:6])
+    ThirdHandRank=HashedHandRank(Hand[6:9])
     
     
     value+=FirstHandRank*FirstHand_weight
@@ -43,15 +43,22 @@ def TopHeavyHandValue(Hand):
     SecondHand_weight=1.5
     ThirdHand_weight=1
     
-    FirstHandRank,dum=Handrank(Hand[0:3])
-    SecondHandRank,dum=Handrank(Hand[3:6])
-    ThirdHandRank,dum=Handrank(Hand[6:9])
+    FirstHandRank=HashedHandRank(Hand[0:3])
+    SecondHandRank=HashedHandRank(Hand[3:6])
+    ThirdHandRank=HashedHandRank(Hand[6:9])
     
     
     value+=FirstHandRank*FirstHand_weight
     value+=SecondHandRank*SecondHand_weight
     value+=ThirdHandRank*ThirdHand_weight
     return value
+def HandSorter(hashnumber):
+    hashstring=str(hashnumber)[::-1]
+    while(len(hashstring)<18):
+        hashstring+="0"
+    print(hashstring)
+    return (int)(hashstring[::-1])
+
 def RandomOrderGenerator():
     order=""
     indices=[0,1,2,3,4,5,6,7,8]
@@ -63,10 +70,10 @@ def RandomOrderGenerator():
     return order
         
 def RandomHandSorter(Hand,Value_function):
-    BestHand=Hand
+    BestHand=Set_Order_fixer(Hand)
     BestValue=Value_function(Hand)
     #takes in an unordered hand and returns a hand with some logic applied
-    for i in range(500):
+    for i in range(200):
         current_hand=Hand_reorder(Hand,RandomOrderGenerator())
         current_hand=Set_Order_fixer(current_hand)
         current_val=Value_function(current_hand)

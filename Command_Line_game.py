@@ -11,14 +11,49 @@ from Logic import *
 from Display import *
 from AI import*
 
-   
+from memory_profiler import profile   
    
 #Hands=HandGenerator(2)
 
 #Hand_print(Hands[0])
 #Hands[0]=Hand_reorder(Hands[0],"3,4,5,6,1,2,7,8,0")
 #Hand_print(Hands[0])
-
+def Player_input_no_2nd_guessing(Hand,Player_No):
+    #used for storing the original 
+    Handdict={}
+    for i in range(len(Hand)):
+        Handdict[Hand[i].number]=str(i)
+        order=""
+    print("Player "+str(Player_No)+"'s Hand: ")
+    Hand_print(Hand)
+    print("Enter indices of first set separated by a ,")
+    order+=input()
+    handleft,Ordered_hand=Hand_popper(Hand,order)
+    Hand_Order_progress(handleft,Ordered_hand)
+        #a temporary variable to convert the indices of the unordered hand to
+        #the original hands
+    print("Enter indices of second set separated by a ,")
+    temp_indices=input()
+    temp_indices.strip()
+    for i in temp_indices.split(","):
+            #getting the original index of the card pointed to by the user
+        order+=","
+        order+=Handdict[handleft[(int)(i)].number]
+        
+    handleft,Ordered_hand=Hand_popper(Hand,order)
+    Hand_Order_progress(handleft,Ordered_hand)
+        
+    for i in range(3):
+            #getting the original index of the card pointed to by the user
+        order+=","
+        order+=Handdict[handleft[(int)(i)].number]
+            
+        
+    handleft,Ordered_hand=Hand_popper(Hand,order)
+    Ordered_hand=Set_Order_fixer(Ordered_hand)
+    Hand_Order_progress(handleft,Ordered_hand)
+       
+    return Ordered_hand
 def Player_input_prompt(Hand,Player_No):
     
     #used for storing the original 
@@ -57,6 +92,7 @@ def Player_input_prompt(Hand,Player_No):
         Hand_Order_progress(handleft,Ordered_hand)
         print("Are you happy with hand thus far Y/N")
         yes_or_no=input().lower()
+        print(dir())
         if(yes_or_no=='y' or yes_or_no=='z'):
             break
     return Ordered_hand
@@ -150,7 +186,7 @@ def Computer_game():
     input("Press Enter to start game")
     #Generate hands
     Hands=HandGenerator(2)
-    P1_hand=Player_input_prompt(Hands[0],1)
+    P1_hand=Player_input_no_2nd_guessing(Hands[0],1)
     for i in range(6):
         print()
     Computer_hand=DoubleStratAI(Hands[1])
@@ -207,9 +243,106 @@ class Player(object):
         self.total_hands=0
         self.points=0
         
-        def identifier(self):
-            return self.name+ " ("+self.player_type+")"
+    def identifier(self):
+        return self.name+ " ("+self.player_type+")"
+def PassToNextPlayer():
+    for i in range(8):
+        print()
+    print("Pass it to the next Player")
+    for i in range(2):
+        print()
+    print("Next player press Enter if ready")
+    input()
+    return
+class Player_v2(object):
+    def __init__(self,player_type,name):
+        self.hand=122538112437102336
+        self.player_type=player_type
+        self.name=name
+        self.total_hands=0
+        self.points=0
+        
+    def identifier(self):
+        return self.name+ " ("+self.player_type+")"
+def Player_generate_prompt_v2():    
+    default_Names=["Bill Gates","CEO of WB","Ratan Tata","Amitabh Bachhan","Bill Gates' son in law", "President of WB"] 
+    print("How many Human players?")
+    PlayerNo=(int)(input())
+    print("How many computers?")
+    CompNo=(int)(input())
+    TotalPlayers=PlayerNo+CompNo
+    print("Manually Enter names for Computer Y/N")
+    if(input().lower()=='n'):
+        not_confirm=False
+        #Shuffling the default names
+        random.shuffle(default_Names)                    
+    else:
+        not_confirm=True
+    #list of player objects
+    Players=list()
+    #Creating players and populating their hands
+    for i in range(TotalPlayers):
+        if(i<PlayerNo):
+            not_confirm=True
+            while(not_confirm):
+                print("Enter name for Player "+str(i+1))
+                name=input()
+                print(f"Happy with {name} Y/N")
+                yesorno=input().lower()
+                not_confirm=yesorno!="y"
+            Players.append(Player_v2("Human",name))
+        
+        if(i<PlayerNo+CompNo and i>=PlayerNo):
+            name=default_Names[i]
+            Players.append(Player_v2("Computer",name))
+    return Players,PlayerNo,CompNo
+def Round_loop(Players,PlayerNo,CompNo):
+    #Generate the list of Hashes for the Hands
+    Hands=HandGeneratorHash(PlayerNo+CompNo)
+    #how many hands won only relevant for a round
+    HandsWon=[0]*(PlayerNo+CompNo)
+    #Split up Computer processing before and after
+    #if(CompNo)=2 then 1 and 1 if 3 then 2 and 1 if 4 then 3 and 1
+    for j in range(PlayerNo,PlayerNo+CompNo-1):
+        Players[j].hand=DoubleStratAI(Hashto9Cards(Hands[j]))
+    for j in range(0,PlayerNo):
+        Players[j].hand=Player_input_no_2nd_guessing(Hashto9Cards(Hands[j]),Players[j].name)
+        if(j!=PlayerNo-1):
+            PassToNextPlayer()
+    #the last element which is always untouched
+    Players[-1].hand=DoubleStratAI(Hashto9Cards(Hands[-1]))
     
+    #Checking who wins the overall round
+    for i in range(0,7,3):
+        #For each 3 cards who wins
+        HandList=[]
+        for p in Players:
+            #Prior to the Hand related text print out the hand
+            if(i<3):
+                print(p.name+" 's hand:")
+                Hand_print(p.hand)
+            HandList.append(p.hand[i:i+3])
+            #Sort the hands by strength
+        Order=Sorted_Hands(HandList)
+        #print(HandList)
+        #print(Order)
+        if(betterSet(HandList[Order[0]],HandList[Order[1]])==0):
+            print("Hand Tied")
+        else:
+            HandsWon[Order[0]]+=1
+            print(Players[Order[0]].name+" wins hand")
+            
+    #At the end of it all
+    for h in range(len(HandsWon)):
+        Players[h].total_hands+=HandsWon[h]
+    return Players
+def Round_loop_test():
+    Players=[Player_v2("Computer","Billy Gates"),Player_v2("Computer","Billy Gates 2"),Player_v2("Computer","Billy Gates 3"),Player_v2("Computer","Billy Gates 4"),Player_v2("Computer","Billy Gates 5")]
+    PlayerNo=0
+    CompNo=5
+    Players=Round_loop(Players,PlayerNo,CompNo)
+    for p in Players:
+        print(p.name+" won "+str(p.total_hands)+ " hands")
 def Player_generate_prompt():
     default_Names=["Bill Gates","CEO of WB","Ratan Tata","Amitabh Bachhan","Bill Gates' son in law", "President of WB"] 
     print("How many Human players?")
@@ -255,7 +388,7 @@ def Player_generate(PlayerNo,CompNo):
     default_Names=["Bill Gates","CEO of WB","Ratan Tata","Amitabh Bachhan","Bill Gates' son in law", "President of WB","Nibri Gaa's Husband"] 
     random.shuffle(default_Names)
     TotalPlayers=PlayerNo+CompNo
-    Hands=HandGenerator(TotalPlayers)
+    Hands=HandGeneratorHash(TotalPlayers)
     #list of player objects
     Players=list()
     #Creating players and populating their hands
@@ -290,11 +423,15 @@ def CustomisableGame():
         gameNo+=1
         for p in Players:
             if(p.player_type=='Human'):
-                p.hand=Player_input_prompt(p.hand,p.name)
+                
+                p.hand=CardsToHash(Player_input_no_2nd_guessing(Hashto9Cards(p.hand),p.name))
+                print(dir())
+                #print(Players[])
             else:
-                p.hand=DoubleStratAI(p.hand)
+                p.hand=CardsToHash(DoubleStratAI(Hashto9Cards(p.hand)))
                 print(p.name+"'s hand :")
-                Hand_print(p.hand)
+                Hand_print(Hashto9Cards(p.hand))
+                print(dir())
         #First hand logic
         for p in Players:
             #resetting hands won
@@ -302,10 +439,10 @@ def CustomisableGame():
         for i in range(0,7,3):
             HandList=[]
             for p in Players:
-                HandList.append(p.hand[i:i+3])
+                HandList.append(Hashto9Cards(p.hand)[i:i+3])
             #Sort the hands by strength
             Order=Sorted_Hands(HandList)
-            if(betterSet(Players[Order[0]].hand,Players[Order[1]].hand)==0):
+            if(betterSet(HandList[Order[0]],HandList[Order[1]])==0):
                 print("Hand Tied")
             else:
                 Players[Order[0]].hands+=1
@@ -313,11 +450,16 @@ def CustomisableGame():
                 print(Players[Order[0]].name+" wins hand")
         isThereWinner=False
         winner=None
+        Hands=HandGeneratorHash(len(Players))
+        j=0
         for p in Players:
+            #allocating the new hands to the players
+            p.hand=Hands[j]
             if(p.hands>=2):
                 isThereWinner=True
                 winner=p
-                
+            j+=1
+            
         if(isThereWinner):
             print(winner.name+" wins Game number "+(str)(gameNo))
             winner.points+=win_payout
@@ -325,12 +467,13 @@ def CustomisableGame():
         else:
             print("Kitty")
             win_payout+=1
-        #Chceks if any player has surpassed the point threshold
+        #Checks if any player has surpassed the point threshold
         for p in Players:
             continueCondition= continueCondition and (p.points<Games)
-        print("reaches end of loop")
+    #print("reaches end of loop")
     for p in Players:
-        if(p.points>Games):
+        print("Gets here")
+        if(p.points>=Games):
             print(p.name+ "wins with " +(str)(p.points)+" points")
                 
 def Start_Series(Game_no,GameType):
