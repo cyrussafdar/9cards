@@ -7,6 +7,7 @@ Created on Thu Jun  9 16:12:30 2022
 """
 
 from colorama import Fore
+
 def Hand_Order_progress(unordered_hand,ordered_hand):
    print("Hand thus far :")
    Hand_print(ordered_hand)
@@ -15,6 +16,7 @@ def Hand_Order_progress(unordered_hand,ordered_hand):
        print("Unordered Hand:")
        Hand_print(unordered_hand)
        print()
+       
 def Hand_print(Hand):
     top_border="_"+len(Hand)*("_")*5
     second_layer="|"+len(Hand)*"    |"

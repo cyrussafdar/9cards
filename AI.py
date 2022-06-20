@@ -278,10 +278,7 @@ def TopHeavyHandValue(Hand):
     value+=SecondHandRank*SecondHand_weight
     value+=ThirdHandRank*ThirdHand_weight
     return value
-def DoubleStratAI(Hand):
-    Bottom=RandomHandSorter(Hand,BottomHeavyHandValue)
-    Top=RandomHandSorter(Hand,TopHeavyHandValue)
-    return winning_hand(Top,Bottom)
+
 def RanktoNormalisedFeatures(Rank):
     """Input: A float rank of the form x.0abcdef where x indicates what kind of a hand it is
     Outputs: Normalised vectors that indicate a broad range of features about the hand"""
@@ -308,80 +305,7 @@ def RanktoNormalisedFeatures(Rank):
     #positionalvalue should range from 0.000001 to 0.0121212
     positionalvalue=positionalvalue/0.0121212
     return kindofHandMatrix,positionalvalue
-def FeaturePopulator(Rank):
-    """Input: A float rank of the form x.0abcdef where x indicates what kind of a hand it is
-    Outputs: Normalised vectors that indicate a broad range of features about the hand"""
-    results=dict()
-    for key in Rank.keys():
-        val=HashedHandRank(Hashto3Cards(key))
-        kindofHandMatrix=[0]*6
-        positionalvalue=0
-        if(val<1):
-            kindofHandMatrix[0]=1
-            positionalvalue=val
-        elif(val<2):
-            kindofHandMatrix[1]=1
-            positionalvalue=val-1
-        elif(val<3):
-            kindofHandMatrix[2]=1
-            positionalvalue=val-2
-        elif(val<4):
-            kindofHandMatrix[3]=1
-            positionalvalue=val-3
-        elif(val<5):
-            kindofHandMatrix[4]=1
-            positionalvalue=val-4
-        else:
-            kindofHandMatrix[5]=1
-            positionalvalue=val-5
-        #positionalvalue should range from 0.000001 to 0.0121212
-        positionalvalue/=0.0121212
-        results[val]= kindofHandMatrix,positionalvalue
-    with open('Features.txt','w') as data: 
-      data.write(str(results)) 
-def ProbabilityPopulator():
-    """Gets the probability of a rank winning"""
-    results=dict()
-    for key1 in Rank.keys():
-        count=0
-        val=HashedHandRank(Hashto3Cards(key1))
-        for key2 in Rank.keys():
-            if(key1!=key2):
-                #if val 
-                if(val>HashedHandRank(Hashto3Cards(key2))):
-                    count+=1
-        results[val]=count/len(Rank)
-        
-        #positionalvalue should range from 0.000001 to 0.0121212
-        
-    with open('HandWinProbability.txt','w') as data: 
-      data.write(str(results))    
-def TruncatedProbabilityPopulator():
-    """Input: A float rank of the form x.0abcdef where x indicates what kind of a hand it is
-    Outputs: Normalised vectors that indicate a broad range of features about the hand"""
-    #Change it to pair and above
-    results=dict()
-    total_count=0
-    for key1 in Rank.keys():
-        count=0
-        val=HashedHandRank(Hashto3Cards(key1))
-        if(val<1):
-            continue
-        for key2 in Rank.keys():
-            if(key1!=key2):
-                #if val 
-                val2=HashedHandRank(Hashto3Cards(key2))
-                if(val2<1):
-                    continue
-                total_count+=1
-                if(val>=val2):
-                    count+=1
-        results[val]=count/total_count
-        
-        #positionalvalue should range from 0.000001 to 0.0121212
-        
-    with open('PairandAboveHandWinProbability.txt','w') as data: 
-      data.write(str(results))   
+
 with open('SubjectiveHandWinProbability.txt') as f:
     data=f.read()    
 Subjective_Hand=ast.literal_eval(data)
@@ -498,9 +422,7 @@ def RandomAItest():
     print("Smarter Prob ordering")
     Hand_print(RandomHandSorter(Hands[0],Smarter_Hand_Win_prob))
 
-import matplotlib.pyplot as plt
-import numpy as np
-import math
+
 def AIheadtohead(Strategy1,Strategy2,series_num,series_length):
     scoreDict=dict()
     for j in range(series_num):
@@ -541,70 +463,7 @@ def AIheadtohead(Strategy1,Strategy2,series_num,series_length):
         #with open(Strategy1.__name__+' v '+Strategy2.__name__+".csv",'a') as data: 
         #  data.write(str(csvstring))    
     return(scoreDict)
-def Null_Hypothesis(series_length):
-    scoreDict={"No strat 1":0,"No strat 2":0,"Ties":0}
-    strat1=[]
-    strat2=[]
-    ties=[]
-    gameNo=[]
-    csvstring="No strat,"+"No strat 2"+","+"Ties"+"\n"
-    for i in range(series_length):
-        gameNo.append(i)
-        print("game "+str(i)+ "started")
-        Hands=HandGenerator(2)
-        res,dum,dum=two_Player_winner(Set_Order_fixer_v2(Hands[0]),Set_Order_fixer_v2(Hands[1]))
-        if(res==1):
-            scoreDict["No strat 1"]+=1
-        elif(res==2):
-            scoreDict["No strat 2"]+=1
-        else:
-            scoreDict["Ties"]+=1
-        print("game "+str(i)+ "done")
-        csvstring+=str(scoreDict["No strat 1"])+","+str(scoreDict["No strat 2"])+","+str(scoreDict["Ties"])+"\n"
-        strat1.append(scoreDict["No strat 1"]/len(gameNo))
-        strat2.append(scoreDict["No strat 2"]/len(gameNo))
-        ties.append(scoreDict["Ties"]/len(gameNo))
-        #print(scoreDict)
-    plt.plot(gameNo,ties, label = "Ties")
-    plt.plot(gameNo,strat1, label = "No strat 1")
-    plt.plot(gameNo,strat2, label = "No strat 2")
-    plt.legend()
-    plt.show()
-    with open("No strat"+' v '+"No strat"+".csv",'a') as data: 
-      data.write(str(csvstring))    
-    return(scoreDict)
-def StratAgainstNoStrat(Strategy,series_length):
-    scoreDict={"No strat":0,Strategy.__name__:0,"Ties":0}
-    strat1=[]
-    strat2=[]
-    ties=[]
-    gameNo=[]
-    csvstring="No strat,"+Strategy.__name__+","+"Ties"+"\n"
-    for i in range(series_length):
-        gameNo.append(i)
-        print("game "+str(i)+ "started")
-        Hands=HandGenerator(2)
-        res,dum,dum=two_Player_winner(Set_Order_fixer_v2(Hands[0]),RandomHandSorter(Hands[1],Strategy))
-        if(res==1):
-            scoreDict["No strat"]+=1
-        elif(res==2):
-            scoreDict[Strategy.__name__]+=1
-        else:
-            scoreDict["Ties"]+=1
-        print("game "+str(i)+ "done")
-        csvstring+=str(scoreDict["No strat"])+","+str(scoreDict[Strategy.__name__])+","+str(scoreDict["Ties"])+"\n"
-        strat1.append(scoreDict["No strat"]/len(gameNo))
-        strat2.append(scoreDict[Strategy.__name__]/len(gameNo))
-        ties.append(scoreDict["Ties"]/len(gameNo))
-        #print(scoreDict)
-    plt.plot(gameNo,ties, label = "Ties")
-    plt.plot(gameNo,strat1, label = "No strat")
-    plt.plot(gameNo,strat2, label = Strategy.__name__)
-    plt.legend()
-    plt.show()
-    with open("No strat"+'_v_'+Strategy.__name__+".csv",'a') as data: 
-      data.write(str(csvstring))    
-    return(scoreDict)
+
 def AIheadtoheadagainstAnother(Strategy1,Strategy2,Strategy3,series_length):
     scoreDict=dict()
     scoreDict[Strategy1.__name__+" Win"]=0
@@ -630,82 +489,8 @@ def AIheadtoheadagainstAnother(Strategy1,Strategy2,Strategy3,series_length):
         #print(scoreDict)
     print(f"Out of {series_length} games")
     return(scoreDict)
-def AIheadtoheadBothHands(Strategy1,Strategy2,series_length):
-    scoreDict=dict()
-    scoreDict[Strategy1.__name__+" Win"]=0
-    scoreDict[Strategy2.__name__+" Win"]=0
-    scoreDict["Ties"]=0
-    for i in range(series_length):
-        #print("game "+str(i)+ "started")
-        Hands=HandGenerator(2)
-        res,dum,dum=two_Player_winner(RandomHandSorter(Hands[0],Strategy1),RandomHandSorter(Hands[1],Strategy2))
-        res2,dum,dum=two_Player_winner(RandomHandSorter(Hands[0],Strategy2),RandomHandSorter(Hands[1],Strategy1))
-        if(res==1):
-            scoreDict[Strategy1.__name__+" Win"]+=1
-        elif(res==2):
-            scoreDict[Strategy2.__name__+" Win"]+=1
-        elif(res==0):
-            scoreDict["Ties"]+=1
-        
-        if(res2==1):
-            scoreDict[Strategy2.__name__+" Win"]+=1
-        elif(res2==2):
-            scoreDict[Strategy1.__name__+" Win"]+=1
-        elif(res2==0):
-            scoreDict["Ties"]+=1
-        if(res!=res2):
-            if(res==1 and res2==2):
-                print(Strategy1.__name__+ " wins with both hands")
-            elif(res==2 and res2==1):
-                print(Strategy2.__name__+ " wins with both hands")
-            #elif(res==0 and res==1):
-                #print(Strategy2.__name__+ " wins with both hands")
-            #print(f"res= {res}")
-            #print(f"res2= {res2}")
-        #print("game "+str(i)+ "done")
-        #print(scoreDict)
-    #print(f"Out of {series_length} games")
-    return(scoreDict)
-def AIheadtoheadVsMe(Strategy1,Strategy2,series_length):
-    ##NOT COMPLETE YET
-    scoreDict=dict()
-    scoreDict[Strategy1.__name__+" Win"]=0
-    scoreDict[Strategy1.__name__+" Ties"]=0
-    scoreDict[Strategy2.__name__+" Win"]=0
-    scoreDict[Strategy2.__name__+" Ties"]=0
-    for i in range(series_length):
-        #print("game "+str(i)+ "started")
-        Hands=HandGenerator(2)
-        Strategy3Hand=Player_input_prompt(Hands[1],"Cyrus")
-        res,dum,dum=two_Player_winner(RandomHandSorter(Hands[0],Strategy1),Strategy3Hand)
-        res2,dum,dum=two_Player_winner(RandomHandSorter(Hands[0],Strategy2),Strategy3Hand)
-        if(res==1):
-            scoreDict[Strategy1.__name__+" Win"]+=1
-        elif(res==0):
-            scoreDict[Strategy1.__name__+" Ties"]+=1
-        
-        if(res2==1):
-            scoreDict[Strategy2.__name__+" Win"]+=1
-        elif(res2==0):
-            scoreDict[Strategy2.__name__+" Ties"]+=1
-        print("game "+str(i)+ "done")
-        #print(scoreDict)
-    print(f"Out of {series_length} games")
-    return(scoreDict)
+
+
 StrategySuite=[]
-def AIheadtoheadSameHand(Strategy1,Strategy2,series_length):
-    scoreDict={Strategy1.__name__+"1":0,Strategy2.__name__+"2":0,"Ties":0}
-    for i in range(series_length):
-        print("game "+str(i)+ "started")
-        Hands=HandGenerator(1)
-        res,dum,dum=two_Player_winner(RandomHandSorter(Hands[0],Strategy1),RandomHandSorter(Hands[0],Strategy2))
-        if(res==1):
-            scoreDict[Strategy1.__name__+"1"]+=1
-        elif(res==2):
-            scoreDict[Strategy2.__name__+"2"]+=1
-        else:
-            scoreDict["Ties"]+=1
-        print("game "+str(i)+ "done")
-        print(scoreDict)
-    return(scoreDict)
+
         

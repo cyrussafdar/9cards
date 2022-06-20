@@ -6,6 +6,12 @@ Created on Mon Jun 13 20:54:00 2022
 @author: cyrussafdar
 """
 from Logic import *
+from Display import*
+from Command_Line_game import*
+from ObsoleteMethods.py import*
+import matplotlib.pyplot as plt
+import numpy as np
+import math
 #A of hearts 2 of hearts 3 of hearts
 StraightFlush=[CARD(12),CARD(0),CARD(1)]
 differentSuitsameSFLUSH=[CARD(25),CARD(13),CARD(14)]
@@ -57,4 +63,105 @@ def PlayerTest():
     Players=Player_generate_prompt_v2()
     for p in Players:
         print(p.identifier())
+# Command Line Tests    
+def Round_loop_test():
+    Players=[Player_v2("Computer","Cyrus"),Player_v2("Computer","Billy Gates 2"),Player_v2("Computer","Billy Gates 3"),Player_v2("Computer","Billy Gates 4"),Player_v2("Computer","Billy Gates 5")]
+    PlayerNo=0
+    CompNo=5
+    Players,w=Round_loop(Players,PlayerNo,CompNo)
+    if(w==None):
+        print("Kitty")
+    else:
+        print(Players[w].name+" wins")
+    for p in Players:
+        print(p.name+" won "+str(p.total_hands)+ " hands")
+
+#AI Tests
+def AIheadtoheadSameHand(Strategy1,Strategy2,series_length):
+    scoreDict={Strategy1.__name__+"1":0,Strategy2.__name__+"2":0,"Ties":0}
+    for i in range(series_length):
+        print("game "+str(i)+ "started")
+        Hands=HandGenerator(1)
+        res,dum,dum=two_Player_winner(RandomHandSorter(Hands[0],Strategy1),RandomHandSorter(Hands[0],Strategy2))
+        if(res==1):
+            scoreDict[Strategy1.__name__+"1"]+=1
+        elif(res==2):
+            scoreDict[Strategy2.__name__+"2"]+=1
+        else:
+            scoreDict["Ties"]+=1
+        print("game "+str(i)+ "done")
+        print(scoreDict)
+    return(scoreDict)
+
+def AIheadtoheadVsMe(Strategy1,Strategy2,series_length):
+    ##NOT COMPLETE YET
+    scoreDict=dict()
+    scoreDict[Strategy1.__name__+" Win"]=0
+    scoreDict[Strategy1.__name__+" Ties"]=0
+    scoreDict[Strategy2.__name__+" Win"]=0
+    scoreDict[Strategy2.__name__+" Ties"]=0
+    for i in range(series_length):
+        #print("game "+str(i)+ "started")
+        Hands=HandGenerator(2)
+        Strategy3Hand=Player_input_prompt(Hands[1],"Cyrus",2)
+        res,dum,dum=two_Player_winner(RandomHandSorter(Hands[0],Strategy1),Strategy3Hand)
+        res2,dum,dum=two_Player_winner(RandomHandSorter(Hands[0],Strategy2),Strategy3Hand)
+        if(res==1):
+            scoreDict[Strategy1.__name__+" Win"]+=1
+        elif(res==0):
+            scoreDict[Strategy1.__name__+" Ties"]+=1
         
+        if(res2==1):
+            scoreDict[Strategy2.__name__+" Win"]+=1
+        elif(res2==0):
+            scoreDict[Strategy2.__name__+" Ties"]+=1
+        print("game "+str(i)+ "done")
+        #print(scoreDict)
+    print(f"Out of {series_length} games")
+    return(scoreDict)
+#Best Test thusfar   
+def AIheadtoheadBothHands(Strategy1,Strategy2,series_length):
+    scoreDict=dict()
+    scoreDict[Strategy1.__name__+" Win"]=0
+    scoreDict[Strategy2.__name__+" Win"]=0
+    scoreDict["Ties"]=0
+    for i in range(series_length):
+        #print("game "+str(i)+ "started")
+        Hands=HandGenerator(2)
+        res,dum,dum=two_Player_winner(RandomHandSorter(Hands[0],Strategy1),RandomHandSorter(Hands[1],Strategy2))
+        res2,dum,dum=two_Player_winner(RandomHandSorter(Hands[0],Strategy2),RandomHandSorter(Hands[1],Strategy1))
+        if(res==1):
+            scoreDict[Strategy1.__name__+" Win"]+=1
+        elif(res==2):
+            scoreDict[Strategy2.__name__+" Win"]+=1
+        elif(res==0):
+            scoreDict["Ties"]+=1
+        
+        if(res2==1):
+            scoreDict[Strategy2.__name__+" Win"]+=1
+        elif(res2==2):
+            scoreDict[Strategy1.__name__+" Win"]+=1
+        elif(res2==0):
+            scoreDict["Ties"]+=1
+        if(res!=res2):
+            if(res==1 and res2==2):
+                print(Strategy1.__name__+ " wins with both hands")
+            elif(res==2 and res2==1):
+                print(Strategy2.__name__+ " wins with both hands")
+            #elif(res==0 and res==1):
+                #print(Strategy2.__name__+ " wins with both hands")
+            #print(f"res= {res}")
+            #print(f"res2= {res2}")
+        #print("game "+str(i)+ "done")
+        #print(scoreDict)
+    #print(f"Out of {series_length} games")
+    return(scoreDict)
+#Order checker
+def SetOrderchecker():
+    Hands=HandGenerator(5)
+    for hand in Hands:
+        Hand_print(hand)
+        print("version 1 :")
+        Hand_print(Set_Order_fixer(hand))
+        print("version 2 :")
+        Hand_print(Set_Order_fixer(hand))
