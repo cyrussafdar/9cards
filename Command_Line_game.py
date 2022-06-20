@@ -54,6 +54,27 @@ def Player_input_no_2nd_guessing(Hand,Player_No):
     Hand_Order_progress(handleft,Ordered_hand)
        
     return Ordered_hand
+def is_valid_order_input(order_input,upper_bound):
+    if(len(order_input)==0):
+        return False
+    if(len(order_input)!=5):
+        print("input too long or short")
+        return False
+    #check if the commas are in the right spot
+    if(order_input[1]!=',' or order_input[3]!=','):
+        print("Comma(,) not in the right spot or no commas(,) at all")
+        return False
+    if((int)(order_input[0])>=upper_bound):
+        print("index "+order_input[0]+" is out of bounds")
+        return False
+    if((int)(order_input[2])>=upper_bound):
+        print("index "+order_input[2]+" is out of bounds")
+        return False
+    if((int)(order_input[4])>=upper_bound):
+        print("index "+order_input[4]+" is out of bounds")
+        return False
+    
+    return True
 def Player_input_prompt(Hand,Player_No):
     # To-do
     #Add failsafe for input
@@ -64,15 +85,26 @@ def Player_input_prompt(Hand,Player_No):
     while(True):
         order=""
         print("Player "+str(Player_No)+"'s Hand: ")
-        Hand_print(Hand)
-        print("Enter indices of first set separated by a ,")
-        order+=input()
+        
+        tentative_text=""
+        while(not is_valid_order_input(tentative_text,9)):
+            Hand_print(Hand)
+            print("Enter indices of first set separated by a ,")
+            print("Format: i,j,k")
+            tentative_text=input()
+        order+=tentative_text
+        #resetting tentative text for the next loop
+        tentative_text=""
         handleft,Ordered_hand=Hand_popper(Hand,order)
-        Hand_Order_progress(handleft,Ordered_hand)
+        
         #a temporary variable to convert the indices of the unordered hand to
         #the original hands
-        print("Enter indices of second set separated by a ,")
-        temp_indices=input()
+        while(not is_valid_order_input(tentative_text,6)):
+            Hand_Order_progress(handleft,Ordered_hand)
+            print("Enter indices of second set separated by a ,")
+            print("Format: i,j,k")
+            tentative_text=input()
+        temp_indices=tentative_text
         temp_indices.strip()
         for i in temp_indices.split(","):
             #getting the original index of the card pointed to by the user
