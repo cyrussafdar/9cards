@@ -7,66 +7,9 @@ Created on Thu Jun  9 16:30:18 2022
 """
 from Logic import *
 from Display import*
+from Command_Line_game import*
+import math
 import random
-def SimpleHandValue(Hand):
-    value=0
-    FirstHand_weight=1
-    SecondHand_weight=1
-    ThirdHand_weight=1
-    
-    FirstHandRank=HashedHandRank(Hand[0:3])
-    SecondHandRank=HashedHandRank(Hand[3:6])
-    ThirdHandRank=HashedHandRank(Hand[6:9])
-    
-    value+=FirstHandRank*FirstHand_weight
-    value+=SecondHandRank*SecondHand_weight
-    value+=ThirdHandRank*ThirdHand_weight
-    return value
-def BottomHeavyHandValue(Hand):
-    value=0
-    FirstHand_weight=1
-    SecondHand_weight=1.5
-    ThirdHand_weight=2
-    
-    FirstHandRank=HashedHandRank(Hand[0:3])
-    SecondHandRank=HashedHandRank(Hand[3:6])
-    ThirdHandRank=HashedHandRank(Hand[6:9])
-    
-    
-    value+=FirstHandRank*FirstHand_weight
-    value+=SecondHandRank*SecondHand_weight
-    value+=ThirdHandRank*ThirdHand_weight
-    return value
-def MiddleHeavyHandValue(Hand):
-    value=0
-    FirstHand_weight=1
-    SecondHand_weight=1.5
-    ThirdHand_weight=1
-    
-    FirstHandRank=HashedHandRank(Hand[0:3])
-    SecondHandRank=HashedHandRank(Hand[3:6])
-    ThirdHandRank=HashedHandRank(Hand[6:9])
-    
-    
-    value+=FirstHandRank*FirstHand_weight
-    value+=SecondHandRank*SecondHand_weight
-    value+=ThirdHandRank*ThirdHand_weight
-    return value
-def TopHeavyHandValue(Hand):
-    value=0
-    FirstHand_weight=2
-    SecondHand_weight=1.5
-    ThirdHand_weight=1
-    
-    FirstHandRank=HashedHandRank(Hand[0:3])
-    SecondHandRank=HashedHandRank(Hand[3:6])
-    ThirdHandRank=HashedHandRank(Hand[6:9])
-    
-    
-    value+=FirstHandRank*FirstHand_weight
-    value+=SecondHandRank*SecondHand_weight
-    value+=ThirdHandRank*ThirdHand_weight
-    return value
 def Hashtostring(hashnumber):
     zerostring="0"
     hashstring=str(hashnumber)
@@ -261,11 +204,282 @@ def RandomHandSorter(Hand,Value_function):
             BestValue=current_val
             BestHand=current_hand
     return BestHand
+with open('HandWinProbability.txt') as f:
+    data=f.read()
+probs=ast.literal_eval(data)
+def Set_Win_prob(Card_set):
+    return probs[HashedHandRank(Card_set)]
+def Hand_Win_prob(Hand):
+    #each probability represents the probability of each part of the hand winning
+    prob_1=Set_Win_prob(Hand[0:3])
+    prob_2=Set_Win_prob(Hand[3:6])
+    prob_3=Set_Win_prob(Hand[6:9])
+    
+    return prob_1*prob_2+prob_1*prob_3+prob_2*prob_3-2*prob_1*prob_2*prob_3
+
+def Smarter_Hand_Win_prob(Hand):
+    #each probability represents the probability of each part of the hand winning
+    first_hand_value=HashedHandRank(Hand[0:3])
+    second_hand_value=HashedHandRank(Hand[3:6])
+    if(first_hand_value not in Subjective_Hand.keys() or second_hand_value not in Subjective_Hand.keys()):
+        prob_1=0
+        prob_2=0
+        prob_3=0
+    else:   
+        prob_1=Subjective_Hand[first_hand_value]
+        prob_2=Subjective_Hand[second_hand_value]
+        prob_3=Set_Win_prob(Hand[6:9])
+    # -3 means clean sweeps are completely ignored -2 is the normal math
+    #prob_1*prob_2+prob_1*prob_3+prob_2*prob_3-2*prob_1*prob_2*prob_3
+    return prob_1+prob_2+prob_3
+
+def BottomHeavyHandValue(Hand):
+    value=0
+    FirstHand_weight=1
+    SecondHand_weight=1.5
+    ThirdHand_weight=2
+    
+    FirstHandRank=HashedHandRank(Hand[0:3])
+    SecondHandRank=HashedHandRank(Hand[3:6])
+    ThirdHandRank=HashedHandRank(Hand[6:9])
+    
+    
+    value+=FirstHandRank*FirstHand_weight
+    value+=SecondHandRank*SecondHand_weight
+    value+=ThirdHandRank*ThirdHand_weight
+    return value
+def MiddleHeavyHandValue(Hand):
+    value=0
+    FirstHand_weight=1
+    SecondHand_weight=1.5
+    ThirdHand_weight=1
+    
+    FirstHandRank=HashedHandRank(Hand[0:3])
+    SecondHandRank=HashedHandRank(Hand[3:6])
+    ThirdHandRank=HashedHandRank(Hand[6:9])
+    
+    
+    value+=FirstHandRank*FirstHand_weight
+    value+=SecondHandRank*SecondHand_weight
+    value+=ThirdHandRank*ThirdHand_weight
+    return value
+def TopHeavyHandValue(Hand):
+    value=0
+    FirstHand_weight=2
+    SecondHand_weight=1.5
+    ThirdHand_weight=1
+    
+    FirstHandRank=HashedHandRank(Hand[0:3])
+    SecondHandRank=HashedHandRank(Hand[3:6])
+    ThirdHandRank=HashedHandRank(Hand[6:9])
+    
+    
+    value+=FirstHandRank*FirstHand_weight
+    value+=SecondHandRank*SecondHand_weight
+    value+=ThirdHandRank*ThirdHand_weight
+    return value
 def DoubleStratAI(Hand):
     Bottom=RandomHandSorter(Hand,BottomHeavyHandValue)
     Top=RandomHandSorter(Hand,TopHeavyHandValue)
     return winning_hand(Top,Bottom)
+def RanktoNormalisedFeatures(Rank):
+    """Input: A float rank of the form x.0abcdef where x indicates what kind of a hand it is
+    Outputs: Normalised vectors that indicate a broad range of features about the hand"""
+    kindofHandMatrix=[0]*6
+    positionalvalue=0
+    if(Rank<1):
+        kindofHandMatrix[0]=1
+        positionalvalue=Rank
+    elif(Rank<2):
+        kindofHandMatrix[1]=1
+        positionalvalue=Rank
+    elif(Rank<3):
+        kindofHandMatrix[2]=1
+        positionalvalue=Rank-2
+    elif(Rank<4):
+        kindofHandMatrix[3]=1
+        positionalvalue=Rank-3
+    elif(Rank<5):
+        kindofHandMatrix[4]=1
+        positionalvalue=Rank-4
+    else:
+        kindofHandMatrix[5]=1
+        positionalvalue=Rank-5
+    #positionalvalue should range from 0.000001 to 0.0121212
+    positionalvalue=positionalvalue/0.0121212
+    return kindofHandMatrix,positionalvalue
+def FeaturePopulator(Rank):
+    """Input: A float rank of the form x.0abcdef where x indicates what kind of a hand it is
+    Outputs: Normalised vectors that indicate a broad range of features about the hand"""
+    results=dict()
+    for key in Rank.keys():
+        val=HashedHandRank(Hashto3Cards(key))
+        kindofHandMatrix=[0]*6
+        positionalvalue=0
+        if(val<1):
+            kindofHandMatrix[0]=1
+            positionalvalue=val
+        elif(val<2):
+            kindofHandMatrix[1]=1
+            positionalvalue=val-1
+        elif(val<3):
+            kindofHandMatrix[2]=1
+            positionalvalue=val-2
+        elif(val<4):
+            kindofHandMatrix[3]=1
+            positionalvalue=val-3
+        elif(val<5):
+            kindofHandMatrix[4]=1
+            positionalvalue=val-4
+        else:
+            kindofHandMatrix[5]=1
+            positionalvalue=val-5
+        #positionalvalue should range from 0.000001 to 0.0121212
+        positionalvalue/=0.0121212
+        results[val]= kindofHandMatrix,positionalvalue
+    with open('Features.txt','w') as data: 
+      data.write(str(results)) 
+def ProbabilityPopulator():
+    """Gets the probability of a rank winning"""
+    results=dict()
+    for key1 in Rank.keys():
+        count=0
+        val=HashedHandRank(Hashto3Cards(key1))
+        for key2 in Rank.keys():
+            if(key1!=key2):
+                #if val 
+                if(val>HashedHandRank(Hashto3Cards(key2))):
+                    count+=1
+        results[val]=count/len(Rank)
+        
+        #positionalvalue should range from 0.000001 to 0.0121212
+        
+    with open('HandWinProbability.txt','w') as data: 
+      data.write(str(results))    
+def TruncatedProbabilityPopulator():
+    """Input: A float rank of the form x.0abcdef where x indicates what kind of a hand it is
+    Outputs: Normalised vectors that indicate a broad range of features about the hand"""
+    #Change it to pair and above
+    results=dict()
+    total_count=0
+    for key1 in Rank.keys():
+        count=0
+        val=HashedHandRank(Hashto3Cards(key1))
+        if(val<1):
+            continue
+        for key2 in Rank.keys():
+            if(key1!=key2):
+                #if val 
+                val2=HashedHandRank(Hashto3Cards(key2))
+                if(val2<1):
+                    continue
+                total_count+=1
+                if(val>=val2):
+                    count+=1
+        results[val]=count/total_count
+        
+        #positionalvalue should range from 0.000001 to 0.0121212
+        
+    with open('PairandAboveHandWinProbability.txt','w') as data: 
+      data.write(str(results))   
+with open('SubjectiveHandWinProbability.txt') as f:
+    data=f.read()    
+Subjective_Hand=ast.literal_eval(data)
+def TruncatedProbabilityFixer():
+    for key in Subjective_Hand.keys():
+        Subjective_Hand[key]=Subjective_Hand[key]/0.2560633484162896
+    with open('SubjectiveHandWinProbability.txt','w') as data: 
+      data.write(str(Subjective_Hand)) 
+with open('Features.txt') as f:
+    data=f.read()
+Features=ast.literal_eval(data)
+def RanktoNormalisedFeaturesCache(Rank):
+    """Input: A float rank of the form x.0abcdef where x indicates what kind of a hand it is
+    Outputs: Normalised vectors that indicate a broad range of features about the hand"""
+    return Features[Rank]
+
+def RanktoSimplerNormalisedFeatures(Rank):
+    """Input: A float rank of the form x.0abcdef where x indicates what kind of a hand it is
+    Outputs: Normalised vectors that indicate a broad range of features about the hand"""
     
+    #positionalvalue should range from 0.000001 to 0.0121212
+    positionalvalue=math.fmod(Rank,1)/0.0121212
+    HandValue=(Rank-positionalvalue)/5
+    return HandValue,positionalvalue    
+def ComplexValue(Hand):
+    #w1,w2,w3
+    value=0
+    ## [0] is weight of kindofHandMatrix
+    ##[1] is weight of positionalvalue
+    ##[2] is the weight of a Top Card
+    ##[3] is a weight of a Pair
+    ##[4] is a weight of a Flush
+    ##[5] is the weight of a Straight
+    ##[6] is the weight of a Straight Flush
+    ##[7] is the weight of a Three of a kind
+    w1=[0.999,0.001,0.0,0.02,0.1,0.21,0.28,0.36]
+    w2=[0.999,0.001,0.0,0.06,0.13,0.2,0.26,0.33]
+    w3=[0.5,0.0005,0.00,0.1,0.3,0.6,0,0]
+    position_weight=[[1,1.5,2,1.4,1.2,1.1],[1.8,2,2.7,1.4,1,1],[2.3,3,2,1,0,0]]
+    weights=[w1,w2,w3]
+    
+    kindofHandMatrix=[0]*3
+    position=[0]*3
+    for i in range(0,7,3):
+        kindofHandMatrix[int(i/3)],position[int(i/3)]=RanktoNormalisedFeaturesCache(HashedHandRank(Hand[i:i+3]))
+        
+    for j in range(3):
+        for i in range(2,8):
+            value+=kindofHandMatrix[j][i-2]*weights[j][i]*weights[j][0]
+        value+=position[j]*weights[j][1]
+        
+    return value
+def SimplerComplexValue(Hand):
+    #w1,w2,w3
+    value=0
+    ## [0] is weight of kindofHandMatrix
+    ##[1] is weight of positionalvalue
+    ##[2] is the weight of a Top Card
+    ##[3] is a weight of a Pair
+    ##[4] is a weight of a Flush
+    ##[5] is the weight of a Straight
+    ##[6] is the weight of a Straight Flush
+    ##[7] is the weight of a Three of a kind
+    w1=[0.99,0.01,0.0,0.05,0.1,0.15,0.3,0.4]
+    w2=[0.99,0.01,0.0,0.05,0.1,0.15,0.3,0.4]
+    w3=[0.99,0.01,0.0,0.05,0.1,0.15,0.3,0.4]
+    weights=[w1,w2,w3]
+    kindofHandMatrix_1,position_1=RanktoNormalisedFeatures(HashedHandRank(Hand[0:3]))
+    kindofHandMatrix_2,position_2=RanktoNormalisedFeatures(HashedHandRank(Hand[3:6]))
+    kindofHandMatrix_3,position_3=RanktoNormalisedFeatures(HashedHandRank(Hand[6:9]))
+    
+    kindofHandMatrix=[0]*3
+    position=[0]*3
+    for i in range(0,7,3):
+        kindofHandMatrix[int(i/3)],position[int(i/3)]=RanktoNormalisedFeatures(HashedHandRank(Hand[i:i+3]))
+        
+    for j in range(3):
+        for i in range(2,8):
+            value+=kindofHandMatrix[j][i-2]*weights[j][i]*weights[j][0]
+        value+=position[j]*weights[j][1]
+        
+    return value
+def ComplexAI(Hand):
+    #I will normalise all the decision values so the AI can identify what decision to make
+    #the features that will be included will be IsThreeOfAKind, 
+    BestHand=Set_Order_fixer_v2(Hand)
+    BestValue=ComplexValueFunction(Hand)
+    #takes in an unordered hand and returns a hand with some logic applied
+    for i in range(1680):
+        current_hand=Hand_reorder(Hand,Orders[i])
+        current_hand=Set_Order_fixer_v2(current_hand)
+        current_val=Value_function(current_hand)
+        if(BestValue<current_val):
+            #print("Hand no: "+str(i))
+            #Hand_print(current_hand)
+            BestValue=current_val
+            BestHand=current_hand
+    return BestHand
 def RandomAItest():
     Hands=HandGenerator(1)
     Hand_print(Hands[0])
@@ -273,17 +487,218 @@ def RandomAItest():
     Hand_print(RandomHandSorter(Hands[0],SimpleHandValue))
     print("Bottom Heavy Hand Value Function")
     Hand_print(RandomHandSorter(Hands[0],BottomHeavyHandValue))
+    print("Middle Heavy Hand Value Function")
+    Hand_print(RandomHandSorter(Hands[0],MiddleHeavyHandValue))
+    print("Complex Hand Value Function")
+    Hand_print(RandomHandSorter(Hands[0],ComplexValue))
     print("Top Heavy Hand Value Function")
     Hand_print(RandomHandSorter(Hands[0],TopHeavyHandValue))
-    print("Both Strategies")
-    Hand_print(DoubleStratAI(Hands[0]))
+    print("Prob ordering")
+    Hand_print(RandomHandSorter(Hands[0],Hand_Win_prob))
+    print("Smarter Prob ordering")
+    Hand_print(RandomHandSorter(Hands[0],Smarter_Hand_Win_prob))
 
-def AIheadtohead(Strategy1,Strategy2,series_length):
+import matplotlib.pyplot as plt
+import numpy as np
+import math
+def AIheadtohead(Strategy1,Strategy2,series_num,series_length):
+    scoreDict=dict()
+    for j in range(series_num):
+        scoreDict[Strategy1.__name__+" "+str(j)]=0
+        scoreDict[Strategy2.__name__+" "+str(j)+"'"]=0
+        scoreDict["Ties "+str(j)]=0
+#        strat1=[]
+#        strat2=[]
+#        ties=[]
+#        gameNo=[]
+        #csvstring=Strategy1.__name__+","+Strategy2.__name__+"2"+","+"Ties"+"\n"
+        for i in range(series_length):
+#            gameNo.append(i)
+            print("game "+str(i)+ "started")
+            Hands=HandGenerator(2)
+            res,dum,dum=two_Player_winner(RandomHandSorter(Hands[0],Strategy1),RandomHandSorter(Hands[1],Strategy2))
+            #res,dum,dum=two_Player_winner(RandomHandSorter(Hands[0],Strategy1),Set_Order_fixer_v2(Hands[1]))
+            if(res==1):
+                scoreDict[Strategy1.__name__+" "+str(j)]+=1
+            elif(res==2):
+                scoreDict[Strategy2.__name__+" "+str(j)+"'"]+=1
+            else:
+                scoreDict["Ties "+str(j)]+=1
+            print("game "+str(i)+ "done")
+            #csvstring+=str(scoreDict[Strategy1.__name__+"1"])+","+str(scoreDict[Strategy2.__name__+"2"])+","+str(scoreDict["Ties"])+"\n"
+#            strat1.append(scoreDict[Strategy1.__name__+"1"]/len(gameNo))
+#            strat2.append(scoreDict[Strategy2.__name__+"2"]/len(gameNo))
+#            ties.append(scoreDict["Ties"]/len(gameNo))
+            #print(scoreDict)
+        #Z score
+#        Z=(np.mean(strat1)-np.mean(strat2))/math.sqrt(np.var(strat1)+np.var(strat2))
+#        plt.plot(gameNo,ties, label = "Ties")
+#        plt.plot(gameNo,strat1, label = Strategy1.__name__)
+#        plt.plot(gameNo,strat2, label = Strategy2.__name__)
+#        print(Z)
+#        plt.legend()
+#        plt.show()
+        #with open(Strategy1.__name__+' v '+Strategy2.__name__+".csv",'a') as data: 
+        #  data.write(str(csvstring))    
+    return(scoreDict)
+def Null_Hypothesis(series_length):
+    scoreDict={"No strat 1":0,"No strat 2":0,"Ties":0}
+    strat1=[]
+    strat2=[]
+    ties=[]
+    gameNo=[]
+    csvstring="No strat,"+"No strat 2"+","+"Ties"+"\n"
+    for i in range(series_length):
+        gameNo.append(i)
+        print("game "+str(i)+ "started")
+        Hands=HandGenerator(2)
+        res,dum,dum=two_Player_winner(Set_Order_fixer_v2(Hands[0]),Set_Order_fixer_v2(Hands[1]))
+        if(res==1):
+            scoreDict["No strat 1"]+=1
+        elif(res==2):
+            scoreDict["No strat 2"]+=1
+        else:
+            scoreDict["Ties"]+=1
+        print("game "+str(i)+ "done")
+        csvstring+=str(scoreDict["No strat 1"])+","+str(scoreDict["No strat 2"])+","+str(scoreDict["Ties"])+"\n"
+        strat1.append(scoreDict["No strat 1"]/len(gameNo))
+        strat2.append(scoreDict["No strat 2"]/len(gameNo))
+        ties.append(scoreDict["Ties"]/len(gameNo))
+        #print(scoreDict)
+    plt.plot(gameNo,ties, label = "Ties")
+    plt.plot(gameNo,strat1, label = "No strat 1")
+    plt.plot(gameNo,strat2, label = "No strat 2")
+    plt.legend()
+    plt.show()
+    with open("No strat"+' v '+"No strat"+".csv",'a') as data: 
+      data.write(str(csvstring))    
+    return(scoreDict)
+def StratAgainstNoStrat(Strategy,series_length):
+    scoreDict={"No strat":0,Strategy.__name__:0,"Ties":0}
+    strat1=[]
+    strat2=[]
+    ties=[]
+    gameNo=[]
+    csvstring="No strat,"+Strategy.__name__+","+"Ties"+"\n"
+    for i in range(series_length):
+        gameNo.append(i)
+        print("game "+str(i)+ "started")
+        Hands=HandGenerator(2)
+        res,dum,dum=two_Player_winner(Set_Order_fixer_v2(Hands[0]),RandomHandSorter(Hands[1],Strategy))
+        if(res==1):
+            scoreDict["No strat"]+=1
+        elif(res==2):
+            scoreDict[Strategy.__name__]+=1
+        else:
+            scoreDict["Ties"]+=1
+        print("game "+str(i)+ "done")
+        csvstring+=str(scoreDict["No strat"])+","+str(scoreDict[Strategy.__name__])+","+str(scoreDict["Ties"])+"\n"
+        strat1.append(scoreDict["No strat"]/len(gameNo))
+        strat2.append(scoreDict[Strategy.__name__]/len(gameNo))
+        ties.append(scoreDict["Ties"]/len(gameNo))
+        #print(scoreDict)
+    plt.plot(gameNo,ties, label = "Ties")
+    plt.plot(gameNo,strat1, label = "No strat")
+    plt.plot(gameNo,strat2, label = Strategy.__name__)
+    plt.legend()
+    plt.show()
+    with open("No strat"+'_v_'+Strategy.__name__+".csv",'a') as data: 
+      data.write(str(csvstring))    
+    return(scoreDict)
+def AIheadtoheadagainstAnother(Strategy1,Strategy2,Strategy3,series_length):
+    scoreDict=dict()
+    scoreDict[Strategy1.__name__+" Win"]=0
+    scoreDict[Strategy1.__name__+" Ties"]=0
+    scoreDict[Strategy2.__name__+" Win"]=0
+    scoreDict[Strategy2.__name__+" Ties"]=0
+    for i in range(series_length):
+        #print("game "+str(i)+ "started")
+        Hands=HandGenerator(2)
+        Strategy3Hand=RandomHandSorter(Hands[1],Strategy3)
+        res,dum,dum=two_Player_winner(RandomHandSorter(Hands[0],Strategy1),Strategy3Hand)
+        res2,dum,dum=two_Player_winner(RandomHandSorter(Hands[0],Strategy2),Strategy3Hand)
+        if(res==1):
+            scoreDict[Strategy1.__name__+" Win"]+=1
+        elif(res==0):
+            scoreDict[Strategy1.__name__+" Ties"]+=1
+        
+        if(res2==1):
+            scoreDict[Strategy2.__name__+" Win"]+=1
+        elif(res2==0):
+            scoreDict[Strategy2.__name__+" Ties"]+=1
+        print("game "+str(i)+ "done")
+        #print(scoreDict)
+    print(f"Out of {series_length} games")
+    return(scoreDict)
+def AIheadtoheadBothHands(Strategy1,Strategy2,series_length):
+    scoreDict=dict()
+    scoreDict[Strategy1.__name__+" Win"]=0
+    scoreDict[Strategy2.__name__+" Win"]=0
+    scoreDict["Ties"]=0
+    for i in range(series_length):
+        #print("game "+str(i)+ "started")
+        Hands=HandGenerator(2)
+        res,dum,dum=two_Player_winner(RandomHandSorter(Hands[0],Strategy1),RandomHandSorter(Hands[1],Strategy2))
+        res2,dum,dum=two_Player_winner(RandomHandSorter(Hands[0],Strategy2),RandomHandSorter(Hands[1],Strategy1))
+        if(res==1):
+            scoreDict[Strategy1.__name__+" Win"]+=1
+        elif(res==2):
+            scoreDict[Strategy2.__name__+" Win"]+=1
+        elif(res==0):
+            scoreDict["Ties"]+=1
+        
+        if(res2==1):
+            scoreDict[Strategy2.__name__+" Win"]+=1
+        elif(res2==2):
+            scoreDict[Strategy1.__name__+" Win"]+=1
+        elif(res2==0):
+            scoreDict["Ties"]+=1
+        if(res!=res2):
+            if(res==1 and res2==2):
+                print(Strategy1.__name__+ " wins with both hands")
+            elif(res==2 and res2==1):
+                print(Strategy2.__name__+ " wins with both hands")
+            #elif(res==0 and res==1):
+                #print(Strategy2.__name__+ " wins with both hands")
+            #print(f"res= {res}")
+            #print(f"res2= {res2}")
+        #print("game "+str(i)+ "done")
+        #print(scoreDict)
+    #print(f"Out of {series_length} games")
+    return(scoreDict)
+def AIheadtoheadVsMe(Strategy1,Strategy2,series_length):
+    ##NOT COMPLETE YET
+    scoreDict=dict()
+    scoreDict[Strategy1.__name__+" Win"]=0
+    scoreDict[Strategy1.__name__+" Ties"]=0
+    scoreDict[Strategy2.__name__+" Win"]=0
+    scoreDict[Strategy2.__name__+" Ties"]=0
+    for i in range(series_length):
+        #print("game "+str(i)+ "started")
+        Hands=HandGenerator(2)
+        Strategy3Hand=Player_input_prompt(Hands[1],"Cyrus")
+        res,dum,dum=two_Player_winner(RandomHandSorter(Hands[0],Strategy1),Strategy3Hand)
+        res2,dum,dum=two_Player_winner(RandomHandSorter(Hands[0],Strategy2),Strategy3Hand)
+        if(res==1):
+            scoreDict[Strategy1.__name__+" Win"]+=1
+        elif(res==0):
+            scoreDict[Strategy1.__name__+" Ties"]+=1
+        
+        if(res2==1):
+            scoreDict[Strategy2.__name__+" Win"]+=1
+        elif(res2==0):
+            scoreDict[Strategy2.__name__+" Ties"]+=1
+        print("game "+str(i)+ "done")
+        #print(scoreDict)
+    print(f"Out of {series_length} games")
+    return(scoreDict)
+StrategySuite=[]
+def AIheadtoheadSameHand(Strategy1,Strategy2,series_length):
     scoreDict={Strategy1.__name__+"1":0,Strategy2.__name__+"2":0,"Ties":0}
     for i in range(series_length):
         print("game "+str(i)+ "started")
-        Hands=HandGenerator(2)
-        res,dum,dum=two_Player_winner(RandomHandSorter(Hands[0],Strategy1),RandomHandSorter(Hands[1],Strategy2))
+        Hands=HandGenerator(1)
+        res,dum,dum=two_Player_winner(RandomHandSorter(Hands[0],Strategy1),RandomHandSorter(Hands[0],Strategy2))
         if(res==1):
             scoreDict[Strategy1.__name__+"1"]+=1
         elif(res==2):
@@ -293,4 +708,4 @@ def AIheadtohead(Strategy1,Strategy2,series_length):
         print("game "+str(i)+ "done")
         print(scoreDict)
     return(scoreDict)
-    
+        

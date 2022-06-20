@@ -55,7 +55,8 @@ def Player_input_no_2nd_guessing(Hand,Player_No):
        
     return Ordered_hand
 def Player_input_prompt(Hand,Player_No):
-    
+    # To-do
+    #Add failsafe for input
     #used for storing the original 
     Handdict={}
     for i in range(len(Hand)):
@@ -92,9 +93,10 @@ def Player_input_prompt(Hand,Player_No):
         Hand_Order_progress(handleft,Ordered_hand)
         print("Are you happy with hand thus far Y/N")
         yes_or_no=input().lower()
-        print(dir())
         if(yes_or_no=='y' or yes_or_no=='z'):
             break
+    with open('PlayerHandData.txt','a') as data: 
+      data.write(f"{CardsToHash(Hand)}:{CardsToHash(Ordered_hand)}\n")    
     return Ordered_hand
 
 def Two_player_game_v2():
@@ -304,7 +306,7 @@ def Round_loop(Players,PlayerNo,CompNo):
     #Split up Computer processing before and after
     #if(CompNo)=2 then 1 and 1 if 3 then 2 and 1 if 4 then 3 and 1
     for j in range(PlayerNo,PlayerNo+CompNo-1):
-        Players[j].hand=DoubleStratAI(Hashto9Cards(Hands[j]))
+        Players[j].hand=RandomHandSorter(Hashto9Cards(Hands[j]),MiddleHeavyHandValue)
     for j in range(0,PlayerNo):
         #Player_input_prompt #Player_input_no_2nd_guessing
         Players[j].hand=Player_input_prompt(Hashto9Cards(Hands[j]),Players[j].name)
@@ -344,10 +346,14 @@ def Round_loop(Players,PlayerNo,CompNo):
     #winner
     return Players,windex
 def Round_loop_test():
-    Players=[Player_v2("Player","Cyrus"),Player_v2("Computer","Billy Gates 2"),Player_v2("Computer","Billy Gates 3"),Player_v2("Computer","Billy Gates 4"),Player_v2("Computer","Billy Gates 5")]
-    PlayerNo=1
-    CompNo=4
-    Players=Round_loop(Players,PlayerNo,CompNo)
+    Players=[Player_v2("Computer","Cyrus"),Player_v2("Computer","Billy Gates 2"),Player_v2("Computer","Billy Gates 3"),Player_v2("Computer","Billy Gates 4"),Player_v2("Computer","Billy Gates 5")]
+    PlayerNo=0
+    CompNo=5
+    Players,w=Round_loop(Players,PlayerNo,CompNo)
+    if(w==None):
+        print("Kitty")
+    else:
+        print(Players[w].name+" wins")
     for p in Players:
         print(p.name+" won "+str(p.total_hands)+ " hands")
 
@@ -396,7 +402,8 @@ def All_encompassing_Game():
         print(p.identifier()+" won "+str(p.points)+" points out of a total "+str(Game_count)+" and a total of "+str(p.total_hands)+" hands")
         print("Hands won percentage of "+ str(int(p.total_hands*100/(Game_count*3)))+"%")
         print("Points won percentage of "+ str(int(p.points*100/Game_count))+"%")
-        print("Hands to points ratio of "+str(p.total_hands/p.points))
+        if(p.points!=0):
+            print("Hands to points ratio of "+str(p.total_hands/p.points))
         print()
     
 def Player_generate_prompt():
@@ -481,13 +488,11 @@ def CustomisableGame():
             if(p.player_type=='Human'):
                 
                 p.hand=CardsToHash(Player_input_no_2nd_guessing(Hashto9Cards(p.hand),p.name))
-                print(dir())
                 #print(Players[])
             else:
                 p.hand=CardsToHash(DoubleStratAI(Hashto9Cards(p.hand)))
                 print(p.name+"'s hand :")
                 Hand_print(Hashto9Cards(p.hand))
-                print(dir())
         #First hand logic
         for p in Players:
             #resetting hands won
