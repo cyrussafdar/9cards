@@ -8,7 +8,9 @@ Created on Mon Jun 13 20:54:00 2022
 from Logic import *
 from Display import*
 from Command_Line_game import*
-from ObsoleteMethods.py import*
+from ObsoleteMethods import*
+from AI import*
+from Cache import*
 import matplotlib.pyplot as plt
 import numpy as np
 import math
@@ -156,6 +158,24 @@ def AIheadtoheadBothHands(Strategy1,Strategy2,series_length):
         #print(scoreDict)
     #print(f"Out of {series_length} games")
     return(scoreDict)
+def RandomAItest():
+    Hands=HandGenerator(1)
+    Hand_print(Hands[0])
+    print("Simple Hand Value Function")
+    Hand_print(RandomHandSorter(Hands[0],SimpleHandValue))
+    print("Bottom Heavy Hand Value Function")
+    Hand_print(RandomHandSorter(Hands[0],BottomHeavyHandValue))
+    print("Middle Heavy Hand Value Function")
+    Hand_print(RandomHandSorter(Hands[0],MiddleHeavyHandValue))
+    print("Complex Hand Value Function")
+    Hand_print(RandomHandSorter(Hands[0],ComplexValue))
+    print("Top Heavy Hand Value Function")
+    Hand_print(RandomHandSorter(Hands[0],TopHeavyHandValue))
+    print("Prob ordering")
+    Hand_print(RandomHandSorter(Hands[0],Hand_Win_prob))
+    print("Smarter Prob ordering")
+    Hand_print(RandomHandSorter(Hands[0],Smarter_Hand_Win_prob))
+
 #Order checker
 def SetOrderchecker():
     Hands=HandGenerator(5)

@@ -8,8 +8,10 @@ Created on Thu Jun  9 16:30:18 2022
 from Logic import *
 from Display import*
 from Command_Line_game import*
+from Cache import*
 import math
 import random
+
 def Hashtostring(hashnumber):
     zerostring="0"
     hashstring=str(hashnumber)
@@ -25,9 +27,7 @@ def HandSorter(hashnumber):
     #0(9)
     for i in range(0,17,2):
         Cards.append(hashstring[i:i+2])
-with open('Orders.txt') as f:
-    data=f.read()
-Orders=ast.literal_eval(data)
+
 def RandomOrderGenerator():
     return Orders[random.randint(0,1680)]
 def OrderPopulator():
@@ -195,7 +195,7 @@ def RandomHandSorter(Hand,Value_function):
     BestValue=Value_function(Hand)
     #takes in an unordered hand and returns a hand with some logic applied
     for i in range(1680):
-        current_hand=Hand_reorder(Hand,Orders[i])
+        current_hand=Hand_reorder(Hand,Cache['Orders'][i])
         current_hand=Set_Order_fixer_v2(current_hand)
         current_val=Value_function(current_hand)
         if(BestValue<current_val):
@@ -204,11 +204,9 @@ def RandomHandSorter(Hand,Value_function):
             BestValue=current_val
             BestHand=current_hand
     return BestHand
-with open('HandWinProbability.txt') as f:
-    data=f.read()
-probs=ast.literal_eval(data)
+
 def Set_Win_prob(Card_set):
-    return probs[HashedHandRank(Card_set)]
+    return Cache["probs"][HashedHandRank(Card_set)]
 def Hand_Win_prob(Hand):
     #each probability represents the probability of each part of the hand winning
     prob_1=Set_Win_prob(Hand[0:3])
@@ -221,18 +219,34 @@ def Smarter_Hand_Win_prob(Hand):
     #each probability represents the probability of each part of the hand winning
     first_hand_value=HashedHandRank(Hand[0:3])
     second_hand_value=HashedHandRank(Hand[3:6])
-    if(first_hand_value not in Subjective_Hand.keys() or second_hand_value not in Subjective_Hand.keys()):
+    if(first_hand_value not in Cache['Subjective_Hand'].keys() or second_hand_value not in Cache['Subjective_Hand'].keys()):
         prob_1=0
         prob_2=0
         prob_3=0
     else:   
-        prob_1=Subjective_Hand[first_hand_value]
-        prob_2=Subjective_Hand[second_hand_value]
+        prob_1=Cache['Subjective_Hand'][first_hand_value]
+        prob_2=Cache['Subjective_Hand'][second_hand_value]
         prob_3=Set_Win_prob(Hand[6:9])
     # -3 means clean sweeps are completely ignored -2 is the normal math
     #prob_1*prob_2+prob_1*prob_3+prob_2*prob_3-2*prob_1*prob_2*prob_3
     return prob_1+prob_2+prob_3
 
+def SimpleHandValue(Hand):
+    value=0
+    FirstHand_weight=1
+    SecondHand_weight=1
+    ThirdHand_weight=1
+    
+    FirstHandRank=HashedHandRank(Hand[0:3])
+    SecondHandRank=HashedHandRank(Hand[3:6])
+    ThirdHandRank=HashedHandRank(Hand[6:9])
+    
+    
+    value+=FirstHandRank*FirstHand_weight
+    value+=SecondHandRank*SecondHand_weight
+    value+=ThirdHandRank*ThirdHand_weight
+    
+    return value
 def BottomHeavyHandValue(Hand):
     value=0
     FirstHand_weight=1
@@ -306,21 +320,17 @@ def RanktoNormalisedFeatures(Rank):
     positionalvalue=positionalvalue/0.0121212
     return kindofHandMatrix,positionalvalue
 
-with open('SubjectiveHandWinProbability.txt') as f:
-    data=f.read()    
-Subjective_Hand=ast.literal_eval(data)
+
 def TruncatedProbabilityFixer():
     for key in Subjective_Hand.keys():
         Subjective_Hand[key]=Subjective_Hand[key]/0.2560633484162896
     with open('SubjectiveHandWinProbability.txt','w') as data: 
       data.write(str(Subjective_Hand)) 
-with open('Features.txt') as f:
-    data=f.read()
-Features=ast.literal_eval(data)
+
 def RanktoNormalisedFeaturesCache(Rank):
     """Input: A float rank of the form x.0abcdef where x indicates what kind of a hand it is
     Outputs: Normalised vectors that indicate a broad range of features about the hand"""
-    return Features[Rank]
+    return Cache['Features'][Rank]
 
 def RanktoSimplerNormalisedFeatures(Rank):
     """Input: A float rank of the form x.0abcdef where x indicates what kind of a hand it is
@@ -404,24 +414,6 @@ def ComplexAI(Hand):
             BestValue=current_val
             BestHand=current_hand
     return BestHand
-def RandomAItest():
-    Hands=HandGenerator(1)
-    Hand_print(Hands[0])
-    print("Simple Hand Value Function")
-    Hand_print(RandomHandSorter(Hands[0],SimpleHandValue))
-    print("Bottom Heavy Hand Value Function")
-    Hand_print(RandomHandSorter(Hands[0],BottomHeavyHandValue))
-    print("Middle Heavy Hand Value Function")
-    Hand_print(RandomHandSorter(Hands[0],MiddleHeavyHandValue))
-    print("Complex Hand Value Function")
-    Hand_print(RandomHandSorter(Hands[0],ComplexValue))
-    print("Top Heavy Hand Value Function")
-    Hand_print(RandomHandSorter(Hands[0],TopHeavyHandValue))
-    print("Prob ordering")
-    Hand_print(RandomHandSorter(Hands[0],Hand_Win_prob))
-    print("Smarter Prob ordering")
-    Hand_print(RandomHandSorter(Hands[0],Smarter_Hand_Win_prob))
-
 
 def AIheadtohead(Strategy1,Strategy2,series_num,series_length):
     scoreDict=dict()

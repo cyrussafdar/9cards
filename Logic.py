@@ -8,6 +8,7 @@ Created on Sat Aug 28 15:18:44 2021
 import random
 import colorama
 import ast
+from Cache import*
 from colorama import Fore
 
 Suits=["♠","♥","♣","♦"]
@@ -57,9 +58,7 @@ def SortedCardsToHash(Card_set):
         HashNumber+=num*mult
         mult*=100
     return HashNumber    
-with open('Rank.txt') as f:
-    data=f.read()
-Rank=ast.literal_eval(data)
+
 #takes in numbers from 0 to 51
 class CARD(object):
     def __init__(self, number):
@@ -155,7 +154,7 @@ def two_Player_winner(Hand_1,Hand_2):
         return 0,p1_points,p2_points
     
 def HashedHandRank(Card_set):
-    return Rank[SortedCardsToHash(Card_set)]
+    return Cache["Rank"][SortedCardsToHash(Card_set)]
 
 def Hand_reorder(Hand,order_string):
    #Takes in a string with postions 0 to 8

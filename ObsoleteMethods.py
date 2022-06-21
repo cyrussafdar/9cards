@@ -5,7 +5,7 @@ Created on Mon Jun 20 23:55:44 2022
 
 @author: cyrussafdar
 """
-
+from Test import*
 def winning_hand(Hand_1,Hand_2):
     p1_points=0
     p2_points=0
