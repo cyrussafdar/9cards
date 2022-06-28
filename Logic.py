@@ -152,7 +152,41 @@ def two_Player_winner(Hand_1,Hand_2):
         return 2,p1_points,p2_points
     else:
         return 0,p1_points,p2_points
+def has_four_of_a_kind(Hand):
+    CardDict=dict()
+    #IndicesDict=dict()
+    highestFreq=0
+    CardOfConcern=-1
+    for i in range(len(Hand)):
+        
+        if Hand[i].Card not in CardDict:
+            CardDict[Hand[i].Card]=1
+            #IndicesDict[Hand[i].Card]=str(i)
+        else:
+            CardDict[Hand[i].Card ]+=1
+            #IndicesDict[Hand[i].Card]+=","+str(i)
+            if(CardDict[Hand[i].Card]>highestFreq):
+                highestFreq=CardDict[Hand[i].Card]
+            if(CardDict[Hand[i].Card]==4):
+                if(CardOfConcern<Hand[i].Card):
+                    CardOfConcern=Hand[i].Card
+                
+            
+    #print(IndicesDict)
+    return CardOfConcern
     
+def hasFourPair(Hand):
+    CardDict=dict()          
+    Index_string=""
+    for i in range(len(Hand)):
+        if Hand[i].Card not in CardDict:
+            CardDict[Hand[i].Card]=str(i)
+        else:
+            CardDict[Hand[i].Card]+=","+str(i)
+            #indicates a pair
+            if(len(CardDict[Hand[i].Card])==3):
+                Index_string+=CardDict[Hand[i].Card]+','
+    return Index_string
 def HashedHandRank(Card_set):
     return Cache["Rank"][SortedCardsToHash(Card_set)]
 

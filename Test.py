@@ -175,6 +175,8 @@ def RandomAItest():
     Hand_print(RandomHandSorter(Hands[0],Hand_Win_prob))
     print("Smarter Prob ordering")
     Hand_print(RandomHandSorter(Hands[0],Smarter_Hand_Win_prob))
+    print("ComplexHand_V2")
+    Hand_print(RandomHandSorter(Hands[0],ComplexValue_v2))
 
 #Order checker
 def SetOrderchecker():

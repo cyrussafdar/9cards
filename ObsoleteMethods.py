@@ -335,61 +335,6 @@ def Player_generate(PlayerNo,CompNo):
             name=default_Names[i]
             Players.append(Player(Hands[i],"Computer",name))
     return Players
-def Player_input_prompt(Hand,Player_No,Total_Players):
-    # To-do
-    #Add failsafe for input
-    #used for storing the original 
-    Handdict={}
-    for i in range(len(Hand)):
-        Handdict[Hand[i].number]=str(i)
-    while(True):
-        order=""
-        print("Player "+str(Player_No)+"'s Hand: ")
-        
-        tentative_text=""
-        while(not is_valid_order_input(tentative_text,9)):
-            Hand_print(Hand)
-            print("Enter indices of first set separated by a ,")
-            print("Format: i,j,k")
-            tentative_text=input()
-        order+=tentative_text
-        #resetting tentative text for the next loop
-        tentative_text=""
-        handleft,Ordered_hand=Hand_popper(Hand,order)
-        
-        #a temporary variable to convert the indices of the unordered hand to
-        #the original hands
-        while(not is_valid_order_input(tentative_text,6)):
-            Hand_Order_progress(handleft,Ordered_hand)
-            print("Enter indices of second set separated by a ,")
-            print("Format: i,j,k")
-            tentative_text=input()
-        temp_indices=tentative_text
-        temp_indices.strip()
-        for i in temp_indices.split(","):
-            #getting the original index of the card pointed to by the user
-            order+=","
-            order+=Handdict[handleft[(int)(i)].number]
-        
-        handleft,Ordered_hand=Hand_popper(Hand,order)
-        Hand_Order_progress(handleft,Ordered_hand)
-        
-        for i in range(3):
-            #getting the original index of the card pointed to by the user
-            order+=","
-            order+=Handdict[handleft[(int)(i)].number]
-            
-        
-        handleft,Ordered_hand=Hand_popper(Hand,order)
-        Ordered_hand=Set_Order_fixer_v2(Ordered_hand)
-        Hand_Order_progress(handleft,Ordered_hand)
-        print("Are you happy with hand thus far Y/N")
-        yes_or_no=input().lower()
-        if(yes_or_no=='y' or yes_or_no=='z'):
-            break
-    with open('PlayerHandData'+str(Total_Players)+'.txt','a') as data: 
-      data.write(f"{CardsToHash(Hand)}:{CardsToHash(Ordered_hand)}\n")    
-    return Ordered_hand
 
 def Two_player_game_v2():
     input("Press Enter to start game")
@@ -708,3 +653,168 @@ def HandGenerator(player_num):
         
     #Contains a list of 9 Card objects    
     return Hands
+
+def RandomOrderGenerator():
+    return Orders[random.randint(0,1680)]
+def OrderPopulator():
+    orders=[]
+    indices=[0,1,2,3,4,5,6,7,8]
+    used_indices=set()
+    Hand_sets=set()
+    for i1 in range(9):
+        used_indices=set()
+        used_indices.add(i1)
+        for i2 in range(9):
+            if(i2 in used_indices):
+                continue
+            used_indices.add(i2)
+            for i3 in range(9):
+                if(i3 in used_indices):
+                    continue
+                used_indices.add(i3)
+                for i4 in range(9):
+                    if(i4 in used_indices):
+                        continue
+                    used_indices.add(i4)
+                    for i5 in range(9):
+                        if(i5 in used_indices):
+                            continue
+                        used_indices.add(i5)
+                        for i6 in range(9):
+                            if(i6 in used_indices):
+                                continue
+                            used_indices.add(i6)
+                            for i7 in range(9):
+                                if(i7 in used_indices):
+                                    continue
+                                used_indices.add(i7)
+                                for i8 in range(9):
+                                    if(i8 in used_indices):
+                                        continue
+                                    used_indices.add(i8)
+                                    for i9 in range(9):
+                                        if(i9 in used_indices):
+                                            continue
+                                        
+                                        HASH=SetAgnosticHashGenerator(i1,i2,i3,i4,i5,i6,i7,i8,i9)
+                                        if(HASH not in Hand_sets):
+                                            orders.append(f"{i1},{i2},{i3},{i4},{i5},{i6},{i7},{i8},{i9}")
+                                            Hand_sets.add(HASH)
+                                        else:
+                                            continue
+                                    used_indices.remove(i8)
+                                used_indices.remove(i7)
+                            used_indices.remove(i6)
+                        used_indices.remove(i5)
+                    used_indices.remove(i4)
+                used_indices.remove(i3)
+            used_indices.remove(i2)                            
+        used_indices.remove(i1)
+    orders_return={}
+    for o in range(len(orders)):
+        orders_return[o]=orders[o]
+    with open('Orders.txt','w') as data: 
+        data.write(str(orders_return))   
+    return orders 
+
+
+def OrderPopulatorTest():
+    orders=[]
+    indices=[0,1,2,3,4,5,6,7,8]
+    used_indices=set()
+    Hand_dict=dict()
+    for i1 in range(9):
+        used_indices=set()
+        used_indices.add(i1)
+        for i2 in range(9):
+            if(i2 in used_indices):
+                continue
+            used_indices.add(i2)
+            for i3 in range(9):
+                if(i3 in used_indices):
+                    continue
+                used_indices.add(i3)
+                for i4 in range(9):
+                    if(i4 in used_indices):
+                        continue
+                    used_indices.add(i4)
+                    for i5 in range(9):
+                        if(i5 in used_indices):
+                            continue
+                        used_indices.add(i5)
+                        for i6 in range(9):
+                            if(i6 in used_indices):
+                                continue
+                            used_indices.add(i6)
+                            for i7 in range(9):
+                                if(i7 in used_indices):
+                                    continue
+                                used_indices.add(i7)
+                                for i8 in range(9):
+                                    if(i8 in used_indices):
+                                        continue
+                                    used_indices.add(i8)
+                                    for i9 in range(9):
+                                        if(i9 in used_indices):
+                                            continue
+                                        
+                                        HASH=SetAgnosticHashGenerator(i1,i2,i3,i4,i5,i6,i7,i8,i9)
+                                        
+                                        if(HASH not in Hand_dict):
+                                            orders.append(f"{i1},{i2},{i3},{i4},{i5},{i6},{i7},{i8},{i9}")
+                                            Hand_dict[HASH]=f"{i1},{i2},{i3},{i4},{i5},{i6},{i7},{i8},{i9}"
+                                        else:
+                                                
+                                            if(isinstance(Hand_dict[HASH], list)):
+                                                Hand_dict[HASH].append(f"{i1},{i2},{i3},{i4},{i5},{i6},{i7},{i8},{i9}")
+                                            else:
+                                                Hand_dict[HASH]=[Hand_dict[HASH],f"{i1},{i2},{i3},{i4},{i5},{i6},{i7},{i8},{i9}"]
+                                    used_indices.remove(i8)
+                                used_indices.remove(i7)
+                            used_indices.remove(i6)
+                        used_indices.remove(i5)
+                    used_indices.remove(i4)
+                used_indices.remove(i3)
+            used_indices.remove(i2)                            
+        used_indices.remove(i1)
+    orders_return={}
+    for o in range(len(orders)):
+        orders_return[o]=orders[o]
+    with open('Test.txt','w') as data: 
+        data.write(str(Hand_dict))   
+    return orders 
+def SetAgnosticHashGenerator(i1,i2,i3,i4,i5,i6,i7,i8,i9):
+    """This uses the fact that regardless of how the sets are organised what matters is the association between elements"""
+    Hash=0
+    set1=[i1,i2,i3]
+    set1.sort()
+    mult=1
+    set1num=0
+    for i in set1:
+        set1num+=mult*i
+        mult*=10
+    
+    set2=[i4,i5,i6]
+    set2.sort()
+    set2num=0
+    mult=1
+    for i in set2:
+        set2num+=mult*i
+        mult*=10
+    
+    set3=[i7,i8,i9]
+    set3.sort()
+    set3num=0
+    mult=1
+    for i in set3:
+        
+        set3num+=mult*i
+        mult*=10
+    setlist=[set1num,set2num,set3num]
+    setlist.sort
+    
+    mult=1
+    for i in setlist:
+        Hash+=i*mult
+        mult*=1000
+    return Hash

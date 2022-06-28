@@ -11,13 +11,134 @@ from Logic import *
 from Display import *
 from AI import*
   
-   
-#Hands=HandGenerator(2)
-
-#Hand_print(Hands[0])
-#Hands[0]=Hand_reorder(Hands[0],"3,4,5,6,1,2,7,8,0")
-#Hand_print(Hands[0])
-
+def Player_input_prompt(Hand,Player_No,Total_Players):
+    Handdict={}
+    for i in range(len(Hand)):
+        Handdict[Hand[i].number]=str(i)
+    while(True):
+        order=""
+        print("Player "+str(Player_No)+"'s Hand: ")
+        
+        tentative_text=""
+        while(not is_valid_order_input(tentative_text,9)):
+            Hand_print(Hand)
+            print("Enter indices of first set separated by a ,")
+            print("Format: i,j,k")
+            tentative_text=input()
+        order+=tentative_text
+        #resetting tentative text for the next loop
+        tentative_text=""
+        handleft,Ordered_hand=Hand_popper(Hand,order)
+        
+        #a temporary variable to convert the indices of the unordered hand to
+        #the original hands
+        while(not is_valid_order_input(tentative_text,6)):
+            Hand_Order_progress(handleft,Ordered_hand)
+            print("Enter indices of second set separated by a ,")
+            print("Format: i,j,k")
+            tentative_text=input()
+        temp_indices=tentative_text
+        temp_indices.strip()
+        for i in temp_indices.split(","):
+            #getting the original index of the card pointed to by the user
+            order+=","
+            order+=Handdict[handleft[(int)(i)].number]
+        
+        handleft,Ordered_hand=Hand_popper(Hand,order)
+        Hand_Order_progress(handleft,Ordered_hand)
+        
+        for i in range(3):
+            #getting the original index of the card pointed to by the user
+            order+=","
+            order+=Handdict[handleft[(int)(i)].number]
+            
+        
+        handleft,Ordered_hand=Hand_popper(Hand,order)
+        Ordered_hand=Set_Order_fixer_v2(Ordered_hand)
+        Hand_Order_progress(handleft,Ordered_hand)
+        print("Are you happy with hand thus far Y/N")
+        yes_or_no=input().lower()
+        if(yes_or_no=='y' or yes_or_no=='z'):
+            break
+    with open('PlayerHandData'+str(Total_Players)+'.txt','a') as data: 
+      data.write(f"{CardsToHash(Hand)}:{CardsToHash(Ordered_hand)}\n")    
+    return Ordered_hand
+def Player_input_prompt_v2(Player,Total_Players):
+    Hand=Hashto9Cards(Player.hand)
+    Hand_print(Hand)
+    FourOKCard=has_four_of_a_kind(Hand)
+    FourPairIndices=hasFourPair(Hand)
+    if(FourOKCard!=-1):
+        #logic
+        print("You have a four of a kind would you like to claim a win? Y/N")
+        WinClaim=input().lower()
+        if(WinClaim=='y' or WinClaim=='z'):
+            Player.four_of_a_kind=FourOKCard
+        else:
+            #setting the number to -1
+            Player.four_of_a_kind=-1
+        
+    elif(len(FourPairIndices)==16):
+        #logic
+        print("You have four pairs would you like to claim a tie? Y/N")
+        TieClaim=input().lower()
+        if(TieClaim=='y' or WinClaim=='z'):
+            Player.pair_indices=FourPairIndices
+        else:
+            #setting the number to -1
+            Player.pair_indices=""
+    
+    Handdict={}
+    for i in range(len(Hand)):
+        Handdict[Hand[i].number]=str(i)
+    while(True):
+        order=""
+        print("Player "+str(Player_No)+"'s Hand: ")
+        
+        tentative_text=""
+        while(not is_valid_order_input(tentative_text,9)):
+            Hand_print(Hand)
+            print("Enter indices of first set separated by a ,")
+            print("Format: i,j,k")
+            tentative_text=input()
+        order+=tentative_text
+        #resetting tentative text for the next loop
+        tentative_text=""
+        handleft,Ordered_hand=Hand_popper(Hand,order)
+        
+        #a temporary variable to convert the indices of the unordered hand to
+        #the original hands
+        while(not is_valid_order_input(tentative_text,6)):
+            Hand_Order_progress(handleft,Ordered_hand)
+            print("Enter indices of second set separated by a ,")
+            print("Format: i,j,k")
+            tentative_text=input()
+        temp_indices=tentative_text
+        temp_indices.strip()
+        for i in temp_indices.split(","):
+            #getting the original index of the card pointed to by the user
+            order+=","
+            order+=Handdict[handleft[(int)(i)].number]
+        
+        handleft,Ordered_hand=Hand_popper(Hand,order)
+        Hand_Order_progress(handleft,Ordered_hand)
+        
+        for i in range(3):
+            #getting the original index of the card pointed to by the user
+            order+=","
+            order+=Handdict[handleft[(int)(i)].number]
+            
+        
+        handleft,Ordered_hand=Hand_popper(Hand,order)
+        Ordered_hand=Set_Order_fixer_v2(Ordered_hand)
+        Hand_Order_progress(handleft,Ordered_hand)
+        print("Are you happy with hand thus far Y/N")
+        yes_or_no=input().lower()
+        if(yes_or_no=='y' or yes_or_no=='z'):
+            break
+    with open('PlayerHandData'+str(Total_Players)+'.txt','a') as data: 
+      data.write(f"{CardsToHash(Hand)}:{CardsToHash(Ordered_hand)}\n")    
+    return Ordered_hand
 def is_valid_order_input(order_input,upper_bound):
     if(len(order_input)==0):
         return False
@@ -54,8 +175,11 @@ class Player_v2(object):
         self.hand=122538112437102336
         self.player_type=player_type
         self.name=name
+        self.four_of_a_kind=-1
+        self.pair_indices=""
         self.total_hands=0
         self.points=0
+        
         
     def identifier(self):
         return self.name+ " ("+self.player_type+")"
